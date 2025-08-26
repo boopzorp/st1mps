@@ -17,7 +17,11 @@ export default function HabitPage({ params }: { params: { id: string } }) {
 
   let habit;
   if (habitDetails) {
-    habit = JSON.parse(habitDetails);
+    try {
+      habit = JSON.parse(decodeURIComponent(habitDetails));
+    } catch (e) {
+      console.error("Failed to parse habit details from URL", e);
+    }
   }
 
   const [stamped, setStamped] = useState<number[]>(() => {
@@ -41,8 +45,10 @@ export default function HabitPage({ params }: { params: { id: string } }) {
   };
 
   const handleEdit = () => {
-    const details = encodeURIComponent(JSON.stringify(habit));
-    router.push(`/new?habit=${details}`);
+    if (habit) {
+      const details = encodeURIComponent(JSON.stringify(habit));
+      router.push(`/new?habit=${details}`);
+    }
   };
 
   if (!habit) {
@@ -101,7 +107,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
            <br />
            <span className={cn(habit.line2Font)}>{habit.titleLine2}</span>
           </h2>
-          <p className="mt-2 text-sm opacity-60">
+          <p className="mt-2 text-sm opacity-60" style={{ color: habit.textColor }}>
             {habit.subtitle}
           </p>
           <div className="mt-6 grid grid-cols-4 gap-3">
@@ -124,6 +130,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
                     <StampIcon
                       name={habit.stampLogo || "check"}
                       className="text-white h-6 w-6"
+                      style={{color: habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white'}}
                     />
                   ) : (
                     <span className="text-sm opacity-50" style={{color: habit.textColor}}>{day}</span>

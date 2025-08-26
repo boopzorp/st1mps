@@ -114,17 +114,24 @@ function HomePageContent() {
       try {
         const newHabit = JSON.parse(decodeURIComponent(newHabitParam));
         
-        let updatedHabits = [...habits];
-        const existingHabitIndex = updatedHabits.findIndex(
-          (h) => h.id.split('-')[0] === newHabit.id.split('-')[0]
-        );
+        setHabits(prevHabits => {
+            const existingHabitIndex = prevHabits.findIndex(
+            (h) => h.id.split('-')[0] === newHabit.id.split('-')[0]
+            );
 
-        if (existingHabitIndex !== -1) {
-           updatedHabits[existingHabitIndex] = newHabit;
-        } else {
-           updatedHabits.push(newHabit);
-        }
-        updateHabits(updatedHabits)
+            let updatedHabits;
+            if (existingHabitIndex !== -1) {
+                updatedHabits = [...prevHabits];
+                updatedHabits[existingHabitIndex] = newHabit;
+            } else {
+                updatedHabits = [...prevHabits, newHabit];
+            }
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('habits', JSON.stringify(updatedHabits));
+            }
+            return updatedHabits;
+        });
+
         // clean up the URL
         router.replace('/', {scroll: false});
 
@@ -132,7 +139,7 @@ function HomePageContent() {
         console.error("Failed to process habit from URL", error);
       }
     }
-  }, [newHabitParam, habits, updateHabits, router]);
+  }, [newHabitParam, router]);
 
   return (
     <div className="min-h-screen bg-black text-white">
