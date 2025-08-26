@@ -21,7 +21,7 @@ const config = {
       fontFamily: {
         sans: ["var(--font-inter)"],
         playfair: ["var(--font-playfair)"],
-        "roboto-slab": ["var(--font-roboto-slab)"],
+        vt323: ["var(--font-vt323)"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -72,15 +72,10 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "stamp-in": {
-          "0%": { transform: "scale(0.5)", opacity: "0" },
-          "100%": { transform: "scale(1)", opacity: "1" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "stamp-in": "stamp-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
       },
     },
   },

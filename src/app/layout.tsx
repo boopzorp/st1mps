@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, Roboto_Slab } from "next/font/google";
+import { Inter, Playfair_Display, VT323 } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/toaster";
 
 const fontInter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fontPlayfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
+  weight: "400",
 });
-const fontRobotoSlab = Roboto_Slab({
+
+const fontVT323 = VT323({
   subsets: ["latin"],
-  variable: "--font-roboto-slab",
+  variable: "--font-vt323",
+  weight: "400",
 });
 
 export const metadata: Metadata = {
-  title: "StampTracker",
-  description: "Create your own habit tracker.",
+  title: "Stamps",
+  description: "A habit tracker",
 };
 
 export default function RootLayout({
@@ -31,10 +34,12 @@ export default function RootLayout({
           "min-h-screen bg-background font-sans antialiased",
           fontInter.variable,
           fontPlayfair.variable,
-          fontRobotoSlab.variable
+          fontVT323.variable
         )}
       >
-        {children}
+        <div className="relative flex min-h-screen flex-col bg-background">
+          <main className="flex-1">{children}</main>
+        </div>
         <Toaster />
       </body>
     </html>

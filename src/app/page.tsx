@@ -1,68 +1,71 @@
-"use client";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
-import { useState, useEffect } from "react";
-import { Controls, type Config } from "@/components/controls";
-import { StampTracker } from "@/components/stamp-tracker";
-import { Card } from "@/components/ui/card";
-import { StampIconName } from "@/components/icons.tsx";
-import { colorThemes } from "@/lib/themes";
+import { Button } from "@/components/ui/button";
 
-const fontMap: { [key: string]: string } = {
-  inter: "font-sans",
-  "playfair-display": "font-playfair",
-  "roboto-slab": "font-roboto-slab",
-};
-
-export default function Home() {
-  const [config, setConfig] = useState<Config>({
-    title: "I will read a book everyday",
-    days: 60,
-    font: "inter",
-    stamp: "star",
-    color: "navy-purple",
-  });
-
-  useEffect(() => {
-    const selectedTheme = colorThemes.find((t) => t.name === config.color);
-    if (selectedTheme) {
-      const root = document.documentElement;
-      root.style.setProperty(
-        "--primary",
-        `${selectedTheme.primary.h} ${selectedTheme.primary.s}% ${selectedTheme.primary.l}%`
-      );
-      root.style.setProperty(
-        "--primary-foreground",
-        `${selectedTheme.primaryForeground.h} ${selectedTheme.primaryForeground.s}% ${selectedTheme.primaryForeground.l}%`
-      );
-      root.style.setProperty(
-        "--ring",
-        `${selectedTheme.ring.h} ${selectedTheme.ring.s}% ${selectedTheme.ring.l}%`
-      );
-    }
-  }, [config.color]);
-
-  const handleConfigChange = (newConfig: Partial<Config>) => {
-    setConfig((prev) => ({ ...prev, ...newConfig }));
-  };
-
-  const fontClass = fontMap[config.font] || "font-sans";
-
+function StampCard({
+  href,
+  title,
+  subtitle,
+  description,
+  cardClass,
+  titleClass,
+}: {
+  href: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  cardClass: string;
+  titleClass: string;
+}) {
   return (
-    <main className="container mx-auto p-4 md:p-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-        <Card className="md:col-span-1 p-6 sticky top-8">
-          <Controls config={config} onConfigChange={handleConfigChange} />
-        </Card>
-        <div className="md:col-span-2">
-          <StampTracker
-            title={config.title}
-            days={config.days}
-            fontClass={fontClass}
-            stamp={config.stamp as StampIconName}
-            key={`${config.days}-${config.stamp}-${config.color}`}
-          />
+    <Link href={href} className="block">
+      <div className={`rounded-lg p-6 text-black ${cardClass}`}>
+        <h2 className={`text-5xl font-bold ${titleClass}`}>{title}</h2>
+        <p className="mt-2 text-sm opacity-60">{subtitle}</p>
+        <div className="mt-6 grid grid-cols-4 gap-3">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="aspect-square rounded-full border-2 border-dashed border-black/20 flex items-center justify-center"
+            >
+              <span className="text-sm opacity-50">{i + 1}</span>
+            </div>
+          ))}
         </div>
+        <p className="mt-6 text-sm text-center opacity-60">{description}</p>
       </div>
-    </main>
+    </Link>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <header className="flex items-center justify-between p-4">
+        <h1 className="font-playfair text-4xl">Stamps</h1>
+        <Button size="icon" className="rounded-full bg-white text-black">
+          <Plus />
+        </Button>
+      </header>
+      <main className="p-4 space-y-8">
+        <StampCard
+          href="/habit/camera"
+          title="GET A NEW CAMERA"
+          subtitle="26 days | 19:10:59"
+          description="buy a canon g7x if you complete 12 design projects by 7th March"
+          cardClass="bg-[#F3F0E6]"
+          titleClass="font-vt323 text-[#3B6EC5]"
+        />
+        <StampCard
+          href="/habit/camera"
+          title="Travel To HONG KONG"
+          subtitle="2m 20d | 19:10:59"
+          description=""
+          cardClass="bg-[#F8D8D8]"
+          titleClass="font-playfair text-black"
+        />
+      </main>
+    </div>
   );
 }

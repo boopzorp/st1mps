@@ -5,6 +5,7 @@ import {
   Smile,
   ThumbsUp,
   Award,
+  Camera,
   type LucideProps,
 } from "lucide-react";
 
@@ -15,6 +16,7 @@ export const stampIcons = {
   smile: Smile,
   "thumbs-up": ThumbsUp,
   award: Award,
+  camera: Camera,
 };
 
 export type StampIconName = keyof typeof stampIcons;
