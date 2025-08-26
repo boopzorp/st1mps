@@ -9,6 +9,7 @@ const fontPlayfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
   weight: "400",
+  style: ["normal", "italic"],
 });
 
 const fontVT323 = VT323({

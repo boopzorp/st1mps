@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 const fontOptions = [
   { value: "font-sans", label: "Inter (Sans-serif)" },
   { value: "font-playfair", label: "Playfair Display (Serif)" },
+  { value: "font-playfair italic", label: "Playfair Display (Cursive)" },
   { value: "font-vt323", label: "VT323 (Pixel)" },
   { value: "font-source-code-pro", label: "Source Code Pro (Mono)" },
   { value: "font-caveat", label: "Caveat (Handwritten)" },
