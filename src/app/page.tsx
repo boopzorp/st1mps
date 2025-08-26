@@ -106,7 +106,9 @@ function HomePageContent() {
     },
   ];
 
-  const habits = habitData ? [habitData, ...defaultHabits] : defaultHabits;
+  const habits = habitData
+    ? [habitData, ...defaultHabits.filter((d) => d.id !== habitData.id)]
+    : defaultHabits;
 
   return (
     <div className="min-h-screen bg-black text-white">
