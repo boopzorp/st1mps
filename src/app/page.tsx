@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Ellipsis, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState, useCallback } from "react";
@@ -51,6 +51,7 @@ function StampCard({
   line1Font: string;
   line2Font: string;
 }) {
+  const displayStamps = numStamps > 12 ? 11 : numStamps;
   return (
     <Link href={href} className="block">
       <div className={`rounded-lg p-6 ${cardClass}`}>
@@ -66,7 +67,7 @@ function StampCard({
           {subtitle}
         </p>
         <div className="mt-6 grid grid-cols-4 gap-3">
-          {Array.from({ length: numStamps }).map((_, i) => (
+          {Array.from({ length: displayStamps }).map((_, i) => (
             <div
               key={i}
               className="aspect-square rounded-full border-2 border-dashed flex items-center justify-center"
@@ -77,6 +78,14 @@ function StampCard({
               </span>
             </div>
           ))}
+          {numStamps > 12 && (
+             <div
+              className="aspect-square rounded-full border-2 border-dashed flex items-center justify-center"
+              style={{ borderColor: `${textColor}40` }}
+            >
+              <Ellipsis className="h-6 w-6" style={{ color: textColor, opacity: 0.5 }}/>
+            </div>
+          )}
         </div>
         <p
           className="mt-6 text-sm text-center opacity-60"
@@ -125,7 +134,15 @@ function HomePageContent() {
             let updatedHabits;
             if (existingHabitIndex !== -1) {
                 updatedHabits = [...prevHabits];
+                const oldHabit = updatedHabits[existingHabitIndex];
+                // if id is different, it means it's a new habit from an edit
+                if (oldHabit.id !== newHabit.id) {
+                   if (typeof window !== 'undefined') {
+                      localStorage.removeItem(`stamps_${oldHabit.id}`);
+                   }
+                }
                 updatedHabits[existingHabitIndex] = newHabit;
+
             } else {
                 updatedHabits = [...prevHabits, newHabit];
             }
@@ -201,5 +218,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
-    
