@@ -91,6 +91,7 @@ function HomePageContent() {
   const router = useRouter();
   const params = useSearchParams();
   const newHabitParam = params.get("habit");
+  const habitToDelete = params.get("delete");
   const [habits, setHabits] = useState<Habit[]>([]);
 
    const updateHabits = useCallback((newHabits: Habit[]) => {
@@ -140,6 +141,17 @@ function HomePageContent() {
       }
     }
   }, [newHabitParam, router]);
+
+  useEffect(() => {
+    if(habitToDelete) {
+      const updatedHabits = habits.filter(h => h.id !== habitToDelete);
+      updateHabits(updatedHabits);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(`stamps_${habitToDelete}`);
+      }
+      router.replace('/', {scroll: false});
+    }
+  }, [habitToDelete, habits, updateHabits, router]);
 
   return (
     <div className="min-h-screen bg-black text-white">

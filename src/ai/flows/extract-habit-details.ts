@@ -49,7 +49,7 @@ Extract the following fields:
    - If the condition mentions a total goal (e.g., "12 projects", "5 workouts"), set this directly to that number.
 
 2. time_period_days →
-   - Convert the time range into the total number of days between today’s date (${new Date().toISOString().split('T')[0]}) and the target end date mentioned.
+   - Convert the time range into the total number of days between today’s date (${new Date().toLocaleDateString('en-CA')}) and the target end date mentioned.
    - If the condition specifies a month-end (e.g., "till November"), use the last day of that month as the end date.
 
 Return the output **strictly in JSON** format.

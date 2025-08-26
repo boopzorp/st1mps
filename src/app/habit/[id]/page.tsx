@@ -3,11 +3,22 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StampIcon } from "@/components/icons";
 import { useSearchParams, useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 export default function HabitPage({ params }: { params: { id: string } }) {
@@ -51,6 +62,12 @@ export default function HabitPage({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleDelete = () => {
+    if (habit) {
+      router.push(`/?delete=${habit.id}`);
+    }
+  }
+
   if (!habit) {
       return (
           <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
@@ -82,6 +99,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
         >
           <ChevronLeft />
         </Link>
+        <div>
         <Button
           variant="ghost"
           className="text-white hover:bg-zinc-800 hover:text-white"
@@ -89,6 +107,30 @@ export default function HabitPage({ params }: { params: { id: string } }) {
         >
           Edit
         </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-zinc-800 hover:text-white"
+            >
+              <Trash2 className="text-red-500"/>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your
+                stamp card and all its progress.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className={buttonVariants({variant: 'destructive'})}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        </div>
       </header>
       <main className="flex-1 flex flex-col justify-between p-4">
         <div
