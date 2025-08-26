@@ -122,7 +122,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
                 >
                   {isStamped ? (
                     <StampIcon
-                      name={"check"}
+                      name={habit.stampLogo || "check"}
                       className="text-white h-6 w-6"
                     />
                   ) : (

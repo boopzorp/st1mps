@@ -1,3 +1,4 @@
+
 import {
   Check,
   Star,
@@ -6,6 +7,10 @@ import {
   ThumbsUp,
   Award,
   Camera,
+  Plane,
+  Book,
+  PenTool,
+  Code,
   type LucideProps,
 } from "lucide-react";
 
@@ -17,11 +22,16 @@ export const stampIcons = {
   "thumbs-up": ThumbsUp,
   award: Award,
   camera: Camera,
+  plane: Plane,
+  book: Book,
+  "pen-tool": PenTool,
+  code: Code,
 };
 
 export type StampIconName = keyof typeof stampIcons;
 
-export const stampIconNames = Object.keys(stampIcons) as StampIconName[];
+// Filter out 'check' for user selection, it's used internally.
+export const stampIconNames = Object.keys(stampIcons).filter(name => name !== 'check') as StampIconName[];
 
 export const StampIcon = ({
   name,

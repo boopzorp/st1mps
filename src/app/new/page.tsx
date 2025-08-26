@@ -19,6 +19,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { extractHabitDetails } from "@/ai/flows/extract-habit-details";
 import { useToast } from "@/hooks/use-toast";
+import { StampIcon, stampIconNames, StampIconName } from "@/components/icons";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const fontOptions = [
   { value: "font-sans", label: "Inter (Sans-serif)" },
@@ -69,6 +71,7 @@ export default function NewHabitPage() {
             condition: decodedHabit.description,
             themeColor: decodedHabit.textColor,
             bgColor: decodedHabit.cardClass,
+            stampLogo: decodedHabit.stampLogo,
           };
         }
       } catch (e) {
@@ -85,6 +88,7 @@ export default function NewHabitPage() {
       condition: "buy a canon g7x if you complete 12 design projects by 7th September",
       themeColor: "#3B6EC5",
       bgColor: "bg-[#F3F0E6]",
+      stampLogo: 'camera' as StampIconName,
     };
   });
 
@@ -95,6 +99,10 @@ export default function NewHabitPage() {
 
   const handleSelectChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleLogoChange = (value: StampIconName) => {
+    setFormData((prev) => ({ ...prev, stampLogo: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -112,6 +120,7 @@ export default function NewHabitPage() {
       titleClass: "",
       numStamps: Number(formData.numStamps),
       textColor: formData.themeColor,
+      stampLogo: formData.stampLogo,
     };
 
     const details = encodeURIComponent(JSON.stringify(newHabit))
@@ -246,6 +255,27 @@ export default function NewHabitPage() {
               </Select>
             </div>
             <div>
+                <Label htmlFor="stampLogo">Stamp Logo</Label>
+                <RadioGroup
+                    value={formData.stampLogo}
+                    onValueChange={(v) => handleLogoChange(v as StampIconName)}
+                    className="grid grid-cols-6 gap-2 mt-2"
+                >
+                    {stampIconNames.map((name) => (
+                        <Label
+                            key={name}
+                            htmlFor={`logo-${name}`}
+                            className={cn("p-3 rounded-md flex items-center justify-center cursor-pointer border-2",
+                                formData.stampLogo === name ? 'border-white' : 'border-zinc-700'
+                            )}
+                        >
+                            <RadioGroupItem value={name} id={`logo-${name}`} className="sr-only" />
+                            <StampIcon name={name} className="h-6 w-6" />
+                        </Label>
+                    ))}
+                </RadioGroup>
+            </div>
+            <div>
                 <div className="flex justify-between items-center">
                     <Label htmlFor="condition">Condition</Label>
                     <Button variant="ghost" size="sm" type="button" onClick={handleAutoFill} disabled={isExtracting}>
@@ -296,3 +326,4 @@ export default function NewHabitPage() {
     </div>
   );
 }
+

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { StampIconName } from "@/components/icons";
 
 interface Habit {
   id: string;
@@ -20,6 +21,7 @@ interface Habit {
   textColor: string;
   line1Font: string;
   line2Font: string;
+  stampLogo: StampIconName;
 }
 
 function StampCard({
