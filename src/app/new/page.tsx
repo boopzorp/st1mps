@@ -79,16 +79,16 @@ export default function NewHabitPage() {
       }
     }
     return {
-      titleLine1: "GET A NEW",
+      titleLine1: "",
       line1Font: "font-sans",
-      titleLine2: "CAMERA",
-      line2Font: "font-vt323",
-      numStamps: 12,
-      timePeriod: 26,
-      condition: "buy a canon g7x if you complete 12 design projects by 7th September",
+      titleLine2: "",
+      line2Font: "font-sans",
+      numStamps: 0,
+      timePeriod: 0,
+      condition: "",
       themeColor: "#3B6EC5",
       bgColor: "bg-[#F3F0E6]",
-      stampLogo: 'camera' as StampIconName,
+      stampLogo: 'star' as StampIconName,
     };
   });
 
@@ -107,7 +107,7 @@ export default function NewHabitPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const habitId = formData.titleLine2.toLowerCase().replace(/ /g, "-") + '-' + Date.now();
+    const habitId = (formData.titleLine2 || "habit").toLowerCase().replace(/ /g, "-") + '-' + Date.now();
     const newHabit = {
       id: habitId,
       titleLine1: formData.titleLine1,
