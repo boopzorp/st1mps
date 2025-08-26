@@ -44,8 +44,9 @@ const prompt = ai.definePrompt({
 Extract the following fields:
 
 1. number_of_stamps →
-   - If the condition mentions a recurring rate (e.g., "per day", "every day", "daily"), set this to how many times per time unit (e.g., per day = 1, twice a day = 2).
-   - If the condition mentions a total goal (e.g., "12 projects", "5 workouts"), set this to that number.
+   - If the condition mentions a recurring rate (e.g., "per day", "every day", "daily"), multiply the rate by the number of days in the time period.
+     Example: "save Rs.500 per day till October 30" → if the period is 64 days, number_of_stamps = 64.
+   - If the condition mentions a total goal (e.g., "12 projects", "5 workouts"), set this directly to that number.
 
 2. time_period_days →
    - Convert the time range into the total number of days between today’s date (${new Date().toISOString().split('T')[0]}) and the target end date mentioned.
