@@ -57,7 +57,7 @@ export default function NewHabitPage() {
     line2Font: "font-vt323",
     numStamps: 12,
     timePeriod: 26,
-    condition: "buy a canon g7x if you complete 12 design projects by 7th March",
+    condition: "buy a canon g7x if you complete 12 design projects by 7th September",
     themeColor: "#3B6EC5",
     bgColor: "bg-[#F3F0E6]",
   });
