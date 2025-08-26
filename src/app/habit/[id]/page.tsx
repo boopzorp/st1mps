@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StampIcon } from "@/components/icons";
 
-export default function HabitPage({ params }: { params: { id: string } }) {
+export default function HabitPage({ params: { id } }: { params: { id: string } }) {
   const [stamped, setStamped] = useState<number[]>([1, 2]);
 
   const toggleStamp = (day: number) => {
@@ -17,7 +17,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
     );
   };
 
-  const isCameraHabit = params.id === "camera";
+  const isCameraHabit = id === "camera";
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -53,7 +53,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
                 : "font-playfair text-black"
             )}
           >
-            {params.id === "camera"
+            {id === "camera"
               ? "GET A NEW CAMERA"
               : "TRAVEL TO HONG KONG"}
           </h2>
