@@ -34,12 +34,29 @@ const prompt = ai.definePrompt({
   name: 'extractHabitDetailsPrompt',
   input: { schema: z.string() },
   output: { schema: ExtractHabitDetailsOutputSchema },
-  prompt: `You are an expert at extracting structured information from text.
-From the following user-provided condition for a habit, extract the total number of stamps (tasks) to complete and the total time period in days.
+  prompt: `You are an expert at extracting structured information from natural language.
+Your task is to parse the user's habit condition and extract two key pieces of information:
+1.  \`numStamps\`: The total number of tasks or actions required.
+2.  \`timePeriodDays\`: The total duration for the habit in days.
 
-If the user provides an end date, calculate the number of days from today. Today is ${new Date().toDateString()}.
-If the user provides a duration (e.g., "in 30 days", "in 2 months"), convert that to a total number of days. Assume 30 days in a month.
+IMPORTANT:
+- Today's date is ${new Date().toDateString()}.
+- If the user provides a target date (e.g., "by September 7th"), you MUST calculate the number of days from today to that date.
+- If the user provides a duration (e.g., "in 2 months"), convert it to days. Assume 1 month = 30 days.
+- Look for phrases that indicate the number of tasks, like "complete 12 projects", "run 10 times", "meditate for 15 sessions".
 
+Here are some examples:
+- Condition: "buy a canon g7x if you complete 12 design projects by 7th September"
+  - numStamps: 12
+  - timePeriodDays: [calculate days from today to Sept 7]
+- Condition: "Go on a vacation if I read 5 books in the next 2 months"
+  - numStamps: 5
+  - timePeriodDays: 60
+- Condition: "Finish the main story of a video game in 30 days"
+  - numStamps: 1 (since it's one main goal)
+  - timePeriodDays: 30
+
+Now, parse the following condition:
 Condition: {{{input}}}
 `,
 });
