@@ -143,6 +143,7 @@ function HomePageContent() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+        <div className="max-w-md mx-auto">
       <header className="flex items-center justify-between p-4">
         <h1 className="font-playfair text-4xl">Stamps</h1>
         <Button
@@ -174,6 +175,7 @@ function HomePageContent() {
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }

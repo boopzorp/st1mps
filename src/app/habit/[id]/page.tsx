@@ -71,6 +71,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="max-w-md mx-auto w-full">
       <header className="flex items-center justify-between p-4">
         <Link
           href="/"
@@ -155,6 +156,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
           </Button>
         </div>
       </main>
+      </div>
     </div>
   );
 }

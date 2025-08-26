@@ -162,6 +162,7 @@ export default function NewHabitPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="max-w-md mx-auto w-full">
       <header className="flex items-center p-4">
         <Link
           href="/"
@@ -323,7 +324,7 @@ export default function NewHabitPage() {
           </Button>
         </form>
       </main>
+      </div>
     </div>
   );
 }
-
