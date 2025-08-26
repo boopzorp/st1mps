@@ -40,7 +40,7 @@ Your task is to parse the user's habit condition and extract two key pieces of i
 2.  \`timePeriodDays\`: The total duration for the habit in days.
 
 IMPORTANT:
-- Today's date is ${new Date().toDateString()}.
+- Today's date is ${new Date().toISOString().split('T')[0]}.
 - If the user provides a target date (e.g., "by September 7th"), you MUST calculate the number of days from today to that date.
 - If the user provides a duration (e.g., "in 2 months"), convert it to days. Assume 1 month = 30 days.
 - Look for phrases that indicate the number of tasks, like "complete 12 projects", "run 10 times", "meditate for 15 sessions".
@@ -48,7 +48,7 @@ IMPORTANT:
 Here are some examples:
 - Condition: "buy a canon g7x if you complete 12 design projects by 7th September"
   - numStamps: 12
-  - timePeriodDays: [calculate days from today to Sept 7]
+  - timePeriodDays: [calculate days from today to Sept 7 of the current or next year, whichever is closer and in the future]
 - Condition: "Go on a vacation if I read 5 books in the next 2 months"
   - numStamps: 5
   - timePeriodDays: 60

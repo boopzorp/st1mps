@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,18 +48,44 @@ const backgroundOptions = [
 
 export default function NewHabitPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isExtracting, setIsExtracting] = useState(false);
-  const [formData, setFormData] = useState({
-    titleLine1: "GET A NEW",
-    line1Font: "font-sans",
-    titleLine2: "CAMERA",
-    line2Font: "font-vt323",
-    numStamps: 12,
-    timePeriod: 26,
-    condition: "buy a canon g7x if you complete 12 design projects by 7th September",
-    themeColor: "#3B6EC5",
-    bgColor: "bg-[#F3F0E6]",
+  
+  const [formData, setFormData] = useState(() => {
+    const habitParam = searchParams.get('habit');
+    if (habitParam) {
+      try {
+        const decodedHabit = JSON.parse(decodeURIComponent(habitParam));
+        // A simple check to ensure it's a habit object
+        if(decodedHabit.id) {
+           return {
+            titleLine1: decodedHabit.titleLine1,
+            line1Font: decodedHabit.line1Font,
+            titleLine2: decodedHabit.titleLine2,
+            line2Font: decodedHabit.line2Font,
+            numStamps: decodedHabit.numStamps,
+            timePeriod: decodedHabit.subtitle.split(' ')[0],
+            condition: decodedHabit.description,
+            themeColor: decodedHabit.textColor,
+            bgColor: decodedHabit.cardClass,
+          };
+        }
+      } catch (e) {
+        console.error("Failed to parse habit from URL", e);
+      }
+    }
+    return {
+      titleLine1: "GET A NEW",
+      line1Font: "font-sans",
+      titleLine2: "CAMERA",
+      line2Font: "font-vt323",
+      numStamps: 12,
+      timePeriod: 26,
+      condition: "buy a canon g7x if you complete 12 design projects by 7th September",
+      themeColor: "#3B6EC5",
+      bgColor: "bg-[#F3F0E6]",
+    };
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -73,8 +99,9 @@ export default function NewHabitPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const habitId = formData.titleLine2.toLowerCase().replace(/ /g, "-") + '-' + Date.now();
     const newHabit = {
-      id: formData.titleLine2.toLowerCase().replace(/ /g, "-"),
+      id: habitId,
       titleLine1: formData.titleLine1,
       titleLine2: formData.titleLine2,
       line1Font: formData.line1Font,
@@ -113,6 +140,7 @@ export default function NewHabitPage() {
             description: "Number of stamps and time period have been updated.",
         })
     } catch(e) {
+        console.error(e);
         toast({
             title: "Extraction failed",
             description: "Could not extract details from the condition. Please enter them manually.",
@@ -197,7 +225,7 @@ export default function NewHabitPage() {
             </div>
             <div>
               <Label htmlFor="line1Font">Reward Line 1 Font</Label>
-              <Select onValueChange={(v) => handleSelectChange("line1Font", v)} defaultValue={formData.line1Font}>
+              <Select onValueChange={(v) => handleSelectChange("line1Font", v)} value={formData.line1Font}>
                 <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {fontOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className={cn(opt.value)}>{opt.label}</SelectItem>)}
@@ -210,7 +238,7 @@ export default function NewHabitPage() {
             </div>
             <div>
               <Label htmlFor="line2Font">Reward Line 2 Font</Label>
-              <Select onValueChange={(v) => handleSelectChange("line2Font", v)} defaultValue={formData.line2Font}>
+              <Select onValueChange={(v) => handleSelectChange("line2Font", v)} value={formData.line2Font}>
                 <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {fontOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className={cn(opt.value)}>{opt.label}</SelectItem>)}
@@ -239,7 +267,7 @@ export default function NewHabitPage() {
             
              <div>
                 <Label htmlFor="themeColor">Theme Color</Label>
-                <Select onValueChange={(v) => handleSelectChange("themeColor", v)} defaultValue={formData.themeColor}>
+                <Select onValueChange={(v) => handleSelectChange("themeColor", v)} value={formData.themeColor}>
                     <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
                     <SelectContent>
                         {colorOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
@@ -248,7 +276,7 @@ export default function NewHabitPage() {
             </div>
             <div>
                 <Label htmlFor="bgColor">Background Color</Label>
-                <Select onValueChange={(v) => handleSelectChange("bgColor", v)} defaultValue={formData.bgColor}>
+                <Select onValueChange={(v) => handleSelectChange("bgColor", v)} value={formData.bgColor}>
                     <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
                     <SelectContent>
                         {backgroundOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}

@@ -4,8 +4,8 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 interface Habit {
@@ -86,31 +86,51 @@ function StampCard({
 }
 
 function HomePageContent() {
+  const router = useRouter();
   const params = useSearchParams();
   const newHabitParam = params.get("habit");
   const [habits, setHabits] = useState<Habit[]>([]);
 
+   const updateHabits = useCallback((newHabits: Habit[]) => {
+    setHabits(newHabits);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('habits', JSON.stringify(newHabits));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedHabits = localStorage.getItem('habits');
+      if (savedHabits) {
+        setHabits(JSON.parse(savedHabits));
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (newHabitParam) {
-      const newHabit = JSON.parse(decodeURIComponent(newHabitParam));
-      setHabits((prevHabits) => {
-        // Avoid adding duplicate habits
-        if (prevHabits.some((h) => h.id === newHabit.id && JSON.stringify(h) === JSON.stringify(newHabit))) {
-          return prevHabits;
-        }
+      try {
+        const newHabit = JSON.parse(decodeURIComponent(newHabitParam));
         
-        const existingHabitIndex = prevHabits.findIndex(
-          (h) => h.id === newHabit.id
+        let updatedHabits = [...habits];
+        const existingHabitIndex = updatedHabits.findIndex(
+          (h) => h.id.split('-')[0] === newHabit.id.split('-')[0]
         );
+
         if (existingHabitIndex !== -1) {
-          const updatedHabits = [...prevHabits];
-          updatedHabits[existingHabitIndex] = newHabit;
-          return updatedHabits;
+           updatedHabits[existingHabitIndex] = newHabit;
+        } else {
+           updatedHabits.push(newHabit);
         }
-        return [...prevHabits, newHabit];
-      });
+        updateHabits(updatedHabits)
+        // clean up the URL
+        router.replace('/', {scroll: false});
+
+      } catch (error) {
+        console.error("Failed to process habit from URL", error);
+      }
     }
-  }, [newHabitParam]);
+  }, [newHabitParam, habits, updateHabits, router]);
 
   return (
     <div className="min-h-screen bg-black text-white">

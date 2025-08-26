@@ -1,17 +1,17 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StampIcon } from "@/components/icons";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 
 export default function HabitPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const router = useRouter();
   const searchParams = useSearchParams();
   const habitDetails = searchParams.get('details');
 
@@ -20,12 +20,29 @@ export default function HabitPage({ params }: { params: { id: string } }) {
     habit = JSON.parse(habitDetails);
   }
 
-  const [stamped, setStamped] = useState<number[]>([]);
+  const [stamped, setStamped] = useState<number[]>(() => {
+    if (typeof window !== 'undefined' && habit) {
+      const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
+      return savedStamps ? JSON.parse(savedStamps) : [];
+    }
+    return [];
+  });
+
+  useEffect(() => {
+     if (typeof window !== 'undefined' && habit) {
+      localStorage.setItem(`stamps_${habit.id}`, JSON.stringify(stamped));
+    }
+  }, [stamped, habit]);
 
   const toggleStamp = (day: number) => {
     setStamped((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
+  };
+
+  const handleEdit = () => {
+    const details = encodeURIComponent(JSON.stringify(habit));
+    router.push(`/new?habit=${details}`);
   };
 
   if (!habit) {
@@ -36,6 +53,15 @@ export default function HabitPage({ params }: { params: { id: string } }) {
           </div>
       )
   }
+
+  const stampNext = () => {
+    const nextUnstamped = Array.from({ length: habit.numStamps }, (_, i) => i + 1)
+                                .find(day => !stamped.includes(day));
+    if(nextUnstamped) {
+      toggleStamp(nextUnstamped);
+    }
+  }
+
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -52,6 +78,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
         <Button
           variant="ghost"
           className="text-white hover:bg-zinc-800 hover:text-white"
+          onClick={handleEdit}
         >
           Edit
         </Button>
@@ -116,7 +143,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
         </div>
 
         <div className="py-4">
-          <Button className="w-full h-14 rounded-full bg-white text-black text-2xl font-semibold hover:bg-gray-200">
+          <Button className="w-full h-14 rounded-full bg-white text-black text-2xl font-semibold hover:bg-gray-200" onClick={stampNext}>
             Stamp
           </Button>
         </div>
