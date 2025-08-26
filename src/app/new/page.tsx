@@ -22,6 +22,9 @@ const fontOptions = [
   { value: "font-sans", label: "Inter (Sans-serif)" },
   { value: "font-playfair", label: "Playfair Display (Serif)" },
   { value: "font-vt323", label: "VT323 (Pixel)" },
+  { value: "font-source-code-pro", label: "Source Code Pro (Mono)" },
+  { value: "font-caveat", label: "Caveat (Handwritten)" },
+  { value: "font-anton", label: "Anton (Display)" },
 ];
 
 const colorOptions = [
@@ -159,7 +162,9 @@ export default function NewHabitPage() {
               <Label htmlFor="line1Font">Reward Line 1 Font</Label>
               <Select onValueChange={(v) => handleSelectChange("line1Font", v)} defaultValue={formData.line1Font}>
                 <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="font-sans">Inter</SelectItem><SelectItem value="font-playfair">Playfair</SelectItem><SelectItem value="font-vt323">VT323</SelectItem></SelectContent>
+                <SelectContent>
+                  {fontOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className={cn(opt.value)}>{opt.label}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
              <div>
@@ -170,7 +175,9 @@ export default function NewHabitPage() {
               <Label htmlFor="line2Font">Reward Line 2 Font</Label>
               <Select onValueChange={(v) => handleSelectChange("line2Font", v)} defaultValue={formData.line2Font}>
                 <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="font-sans">Inter</SelectItem><SelectItem value="font-playfair">Playfair</SelectItem><SelectItem value="font-vt323">VT323</SelectItem></SelectContent>
+                <SelectContent>
+                  {fontOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className={cn(opt.value)}>{opt.label}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
 

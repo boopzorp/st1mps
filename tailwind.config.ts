@@ -22,6 +22,9 @@ const config = {
         sans: ["var(--font-inter)"],
         playfair: ["var(--font-playfair)"],
         vt323: ["var(--font-vt323)"],
+        "source-code-pro": ["var(--font-source-code-pro)"],
+        caveat: ["var(--font-caveat)"],
+        anton: ["var(--font-anton)"],
       },
       colors: {
         border: "hsl(var(--border))",
