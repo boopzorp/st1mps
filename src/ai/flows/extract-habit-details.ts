@@ -10,10 +10,12 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { fromZodError } from 'zod-validation-error';
+import { differenceInDays, parse } from 'date-fns';
 
-const ExtractHabitDetailsOutputSchema = z.object({
-  number_of_stamps: z.number().describe('The number of stamps to complete the habit.'),
-  time_period_days: z.number().describe('The number of days to complete the habit.'),
+const AIExtractionSchema = z.object({
+  target_date: z.string().optional().describe('The target date mentioned in the text, in YYYY-MM-DD format. If no date is mentioned, this can be omitted.'),
+  total_stamps: z.number().optional().describe('The total number of stamps/activities mentioned. Omit if a daily/recurring activity is mentioned.'),
+  is_daily: z.boolean().describe('Set to true if the activity is described as daily or recurring per day.'),
 });
 
 // This is the type that the rest of the application will use.
@@ -29,30 +31,67 @@ export async function extractHabitDetails(
   if (!result) {
     throw new Error('Failed to extract habit details');
   }
-   // Map the AI's output to the format the application expects.
+
+  let timePeriodDays = 0;
+  let numStamps = 0;
+
+  if (result.target_date) {
+    const today = new Date();
+    // Set time to 00:00:00 to ensure full days are counted
+    today.setHours(0, 0, 0, 0); 
+    
+    // The AI returns YYYY-MM-DD, which parse() understands correctly.
+    const targetDate = parse(result.target_date, 'yyyy-MM-dd', new Date());
+    targetDate.setHours(0,0,0,0);
+
+    if (!isNaN(targetDate.getTime())) {
+       timePeriodDays = differenceInDays(targetDate, today);
+       // Add 1 to make the period inclusive of the end date
+       if (timePeriodDays >= 0) {
+         timePeriodDays += 1;
+       }
+    }
+  }
+
+  if (result.is_daily && timePeriodDays > 0) {
+    numStamps = timePeriodDays;
+  } else if (result.total_stamps) {
+    numStamps = result.total_stamps;
+  }
+  
+  // A fallback in case the AI provides a duration but not a stamp count.
+  if (numStamps === 0 && timePeriodDays > 0 && !result.total_stamps) {
+      numStamps = timePeriodDays;
+  }
+
+
   return {
-    numStamps: result.number_of_stamps,
-    timePeriodDays: result.time_period_days,
+    numStamps: Math.max(0, numStamps),
+    timePeriodDays: Math.max(0, timePeriodDays),
   };
 }
 
 const prompt = ai.definePrompt({
   name: 'extractHabitDetailsPrompt',
   input: { schema: z.string() },
-  output: { schema: ExtractHabitDetailsOutputSchema },
-  prompt: `You are given a condition in natural language about completing a task within a time limit.
-Extract the following fields:
+  output: { schema: AIExtractionSchema },
+  prompt: `You are an expert at extracting structured information from a user's description of a habit they want to track.
+Today's date is ${new Date().toLocaleDateString('en-CA')}.
+From the user's condition, extract the following information:
 
-1. number_of_stamps →
-   - If the condition mentions a recurring rate (e.g., "per day", "every day", "daily"), multiply the rate by the number of days in the time period.
-     Example: "save Rs.500 per day till October 30" → if the period is 64 days, number_of_stamps = 64.
-   - If the condition mentions a total goal (e.g., "12 projects", "5 workouts"), set this directly to that number.
+1.  **target_date**: Identify the end date for the habit. Convert it to YYYY-MM-DD format.
+    - "till October 30th" -> Figure out the year, assume current year if not specified.
+    - "complete by the end of November" -> Use the last day of November.
+    - If no date is mentioned, omit this field.
 
-2. time_period_days →
-   - Convert the time range into the total number of days between today’s date (${new Date().toLocaleDateString('en-CA')}) and the target end date mentioned.
-   - If the condition specifies a month-end (e.g., "till November"), use the last day of that month as the end date.
+2.  **total_stamps**: If the user mentions a specific total number of times they want to do something (e.g., "read 5 books", "complete 10 projects"), extract that number.
+    - Do NOT provide this if the activity is daily (e.g., "run every day").
 
-Return the output **strictly in JSON** format.
+3.  **is_daily**: Determine if the task is a recurring daily activity.
+    - "save $10 per day", "run every day", "practice daily" -> true.
+    - "read 5 books by next month" -> false.
+
+Return the output strictly in JSON format.
 
 Input condition: "{{{input}}}"
 `,
@@ -62,7 +101,7 @@ const extractHabitDetailsFlow = ai.defineFlow(
   {
     name: 'extractHabitDetailsFlow',
     inputSchema: z.string(),
-    outputSchema: ExtractHabitDetailsOutputSchema,
+    outputSchema: AIExtractionSchema,
   },
   async (input) => {
     try {
