@@ -99,7 +99,7 @@ function HomePageContent() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('habits', JSON.stringify(newHabits));
     }
-  }, []);
+  }, [setHabits]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
