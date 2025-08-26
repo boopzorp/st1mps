@@ -91,9 +91,14 @@ function HomePageContent() {
   const [habits, setHabits] = useState<Habit[]>([]);
 
   useEffect(() => {
-    const newHabit = newHabitParam ? (JSON.parse(newHabitParam) as Habit) : null;
-    if (newHabit) {
+    if (newHabitParam) {
+      const newHabit = JSON.parse(decodeURIComponent(newHabitParam));
       setHabits((prevHabits) => {
+        // Avoid adding duplicate habits
+        if (prevHabits.some((h) => h.id === newHabit.id && JSON.stringify(h) === JSON.stringify(newHabit))) {
+          return prevHabits;
+        }
+        
         const existingHabitIndex = prevHabits.findIndex(
           (h) => h.id === newHabit.id
         );
@@ -123,18 +128,21 @@ function HomePageContent() {
       </header>
       <main className="p-4 space-y-8">
         {habits.length > 0 ? (
-            habits.map((habit) => (
-            <StampCard
+          habits.map((habit) => {
+            const details = encodeURIComponent(JSON.stringify(habit));
+            return (
+              <StampCard
                 key={habit.id}
-                href={`/habit/${habit.id}`}
+                href={`/habit/${habit.id}?details=${details}`}
                 {...habit}
-            />
-            ))
+              />
+            );
+          })
         ) : (
-            <div className="text-center text-gray-500 mt-20">
-                <p>No stamps yet.</p>
-                <p>Click the '+' button to create one.</p>
-            </div>
+          <div className="text-center text-gray-500 mt-20">
+            <p>No stamps yet.</p>
+            <p>Click the '+' button to create one.</p>
+          </div>
         )}
       </main>
     </div>
