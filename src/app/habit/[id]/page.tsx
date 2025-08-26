@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -35,25 +35,36 @@ export default function HabitPage({ params }: { params: { id: string } }) {
     }
   }
 
-  const [stamped, setStamped] = useState<number[]>(() => {
-    if (typeof window !== 'undefined' && habit) {
-      const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
-      return savedStamps ? JSON.parse(savedStamps) : [];
-    }
-    return [];
-  });
+  const [initialStamped, setInitialStamped] = useState<number[]>([]);
+  const [stamped, setStamped] = useState<number[]>([]);
 
   useEffect(() => {
-     if (typeof window !== 'undefined' && habit) {
-      localStorage.setItem(`stamps_${habit.id}`, JSON.stringify(stamped));
+    if (typeof window !== 'undefined' && habit) {
+      const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
+      const stamps = savedStamps ? JSON.parse(savedStamps) : [];
+      setInitialStamped(stamps);
+      setStamped(stamps);
     }
-  }, [stamped, habit]);
+  }, [habit]);
+
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(initialStamped.sort()) !== JSON.stringify(stamped.sort());
+  }, [initialStamped, stamped]);
+
 
   const toggleStamp = (day: number) => {
     setStamped((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
+  
+  const saveProgress = () => {
+    if (typeof window !== 'undefined' && habit) {
+      localStorage.setItem(`stamps_${habit.id}`, JSON.stringify(stamped));
+      setInitialStamped(stamped);
+    }
+  }
+
 
   const handleEdit = () => {
     if (habit) {
@@ -193,8 +204,12 @@ export default function HabitPage({ params }: { params: { id: string } }) {
         </div>
 
         <div className="py-4">
-          <Button className="w-full h-14 rounded-full bg-white text-black text-2xl font-semibold hover:bg-gray-200" onClick={stampNext}>
-            Stamp
+          <Button
+            className="w-full h-14 rounded-full bg-white text-black text-2xl font-semibold hover:bg-gray-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            onClick={saveProgress}
+            disabled={!hasChanges}
+          >
+            Save Progress
           </Button>
         </div>
       </main>
