@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Sparkles } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
@@ -17,8 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { extractHabitDetails } from "@/ai/flows/extract-habit-details";
-import { useToast } from "@/hooks/use-toast";
 import { StampIcon, stampIconNames, StampIconName } from "@/components/icons";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -51,8 +49,6 @@ const backgroundOptions = [
 export default function NewHabitPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { toast } = useToast();
-  const [isExtracting, setIsExtracting] = useState(false);
   
   const [formData, setFormData] = useState(() => {
     const habitParam = searchParams.get('habit');
@@ -126,39 +122,6 @@ export default function NewHabitPage() {
     const details = encodeURIComponent(JSON.stringify(newHabit))
     router.push(`/?habit=${details}`);
   };
-
-  const handleAutoFill = async () => {
-    if (!formData.condition) {
-        toast({
-            title: "Condition is empty",
-            description: "Please enter a condition to auto-fill details.",
-            variant: 'destructive',
-        })
-        return;
-    }
-    setIsExtracting(true);
-    try {
-        const result = await extractHabitDetails(formData.condition);
-        setFormData(prev => ({
-            ...prev,
-            numStamps: result.numStamps,
-            timePeriod: result.timePeriodDays
-        }));
-         toast({
-            title: "Details extracted!",
-            description: "Number of stamps and time period have been updated.",
-        })
-    } catch(e) {
-        console.error(e);
-        toast({
-            title: "Extraction failed",
-            description: "Could not extract details from the condition. Please enter them manually.",
-            variant: 'destructive',
-        })
-    } finally {
-        setIsExtracting(false);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -277,13 +240,7 @@ export default function NewHabitPage() {
                 </RadioGroup>
             </div>
             <div>
-                <div className="flex justify-between items-center">
-                    <Label htmlFor="condition">Condition</Label>
-                    <Button variant="ghost" size="sm" type="button" onClick={handleAutoFill} disabled={isExtracting}>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        {isExtracting ? 'Extracting...' : 'Auto-fill'}
-                    </Button>
-                </div>
+                <Label htmlFor="condition">Condition</Label>
                 <Textarea id="condition" value={formData.condition} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
             </div>
 
