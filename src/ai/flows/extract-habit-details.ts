@@ -39,22 +39,26 @@ Your task is to parse the user's habit condition and extract two key pieces of i
 1.  \`numStamps\`: The total number of tasks or actions required.
 2.  \`timePeriodDays\`: The total duration for the habit in days.
 
-IMPORTANT:
+IMPORTANT RULES:
 - Today's date is ${new Date().toISOString().split('T')[0]}.
-- If the user provides a target date (e.g., "by September 7th"), you MUST calculate the number of days from today to that date.
-- If the user provides a duration (e.g., "in 2 months"), convert it to days. Assume 1 month = 30 days.
-- Look for phrases that indicate the number of tasks, like "complete 12 projects", "run 10 times", "meditate for 15 sessions".
+- If the user provides a target date (e.g., "by September 7th"), you MUST calculate the number of days from today to that date. Use the current year. If the date is in the past, assume it's for the next year.
+- If the user provides a duration (e.g., "in 2 months"), convert it to days. Assume 1 month = 30 days, 1 week = 7 days.
+- **If the condition implies a daily action (e.g., "per day", "every day"), the \`numStamps\` MUST be equal to the \`timePeriodDays\`.**
+- If no specific number of tasks is mentioned, assume \`numStamps\` is 1 (for completing a single goal).
 
 Here are some examples:
 - Condition: "buy a canon g7x if you complete 12 design projects by 7th September"
   - numStamps: 12
-  - timePeriodDays: [calculate days from today to Sept 7 of the current or next year, whichever is closer and in the future]
+  - timePeriodDays: [calculate days from today to Sept 7]
 - Condition: "Go on a vacation if I read 5 books in the next 2 months"
   - numStamps: 5
   - timePeriodDays: 60
 - Condition: "Finish the main story of a video game in 30 days"
-  - numStamps: 1 (since it's one main goal)
+  - numStamps: 1
   - timePeriodDays: 30
+- Condition: "If I save up 500Rs per day till October 30"
+  - timePeriodDays: [calculate days from today to Oct 30]
+  - numStamps: [should be the same as timePeriodDays]
 
 Now, parse the following condition:
 Condition: {{{input}}}
