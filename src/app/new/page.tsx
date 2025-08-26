@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
@@ -19,6 +19,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { StampIcon, stampIconNames, StampIconName } from "@/components/icons";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, differenceInCalendarDays } from "date-fns";
 
 const fontOptions = [
   { value: "font-sans", label: "Inter (Sans-serif)" },
@@ -63,11 +66,12 @@ export default function NewHabitPage() {
             titleLine2: decodedHabit.titleLine2,
             line2Font: decodedHabit.line2Font,
             numStamps: decodedHabit.numStamps,
-            timePeriod: decodedHabit.subtitle.split(' ')[0],
+            endDate: decodedHabit.endDate ? new Date(decodedHabit.endDate) : undefined,
             condition: decodedHabit.description,
             themeColor: decodedHabit.textColor,
             bgColor: decodedHabit.cardClass,
             stampLogo: decodedHabit.stampLogo,
+            createdAt: decodedHabit.createdAt ? new Date(decodedHabit.createdAt) : new Date()
           };
         }
       } catch (e) {
@@ -80,11 +84,12 @@ export default function NewHabitPage() {
       titleLine2: "",
       line2Font: "font-sans",
       numStamps: 0,
-      timePeriod: 0,
+      endDate: undefined as Date | undefined,
       condition: "",
       themeColor: "#3B6EC5",
       bgColor: "bg-[#F3F0E6]",
       stampLogo: 'star' as StampIconName,
+      createdAt: new Date(),
     };
   });
 
@@ -96,6 +101,10 @@ export default function NewHabitPage() {
   const handleSelectChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
+  
+  const handleDateChange = (date: Date | undefined) => {
+    setFormData((prev) => ({...prev, endDate: date}));
+  }
 
   const handleLogoChange = (value: StampIconName) => {
     setFormData((prev) => ({ ...prev, stampLogo: value }));
@@ -104,24 +113,35 @@ export default function NewHabitPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const habitId = (formData.titleLine2 || "habit").toLowerCase().replace(/ /g, "-") + '-' + Date.now();
+    
+    let subtitle = "0 days";
+    if (formData.endDate) {
+        const days = differenceInCalendarDays(formData.endDate, formData.createdAt) + 1;
+        subtitle = `${days} day${days !== 1 ? 's' : ''}`;
+    }
+    
     const newHabit = {
       id: habitId,
       titleLine1: formData.titleLine1,
       titleLine2: formData.titleLine2,
       line1Font: formData.line1Font,
       line2Font: formData.line2Font,
-      subtitle: `${formData.timePeriod} days`,
+      subtitle: subtitle,
       description: formData.condition,
       cardClass: formData.bgColor,
       titleClass: "",
       numStamps: Number(formData.numStamps),
       textColor: formData.themeColor,
       stampLogo: formData.stampLogo,
+      createdAt: formData.createdAt.toISOString(),
+      endDate: formData.endDate?.toISOString(),
     };
 
     const details = encodeURIComponent(JSON.stringify(newHabit))
     router.push(`/?habit=${details}`);
   };
+
+  const timePeriodDays = formData.endDate ? differenceInCalendarDays(formData.endDate, formData.createdAt) + 1 : 0;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -162,7 +182,7 @@ export default function NewHabitPage() {
               <p
                 className="mt-2 text-sm opacity-60"
                 style={{ color: formData.themeColor }}
-              >{`${formData.timePeriod || 0} days`}</p>
+              >{`${timePeriodDays} day${timePeriodDays !== 1 ? 's' : ''}`}</p>
               <div className="mt-6 grid grid-cols-4 gap-3">
                 {Array.from({ length: Number(formData.numStamps) || 0 }).map(
                   (_, i) => (
@@ -248,9 +268,30 @@ export default function NewHabitPage() {
               <Label htmlFor="numStamps">Number of Stamps</Label>
               <Input id="numStamps" type="number" value={formData.numStamps} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
             </div>
-             <div>
-              <Label htmlFor="timePeriod">Time Period (days)</Label>
-              <Input id="timePeriod" type="number" value={formData.timePeriod} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
+            <div>
+              <Label htmlFor="endDate">End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal mt-1 bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white",
+                      !formData.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.endDate ? format(formData.endDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={formData.endDate}
+                    onSelect={handleDateChange}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             
              <div>
@@ -285,3 +326,5 @@ export default function NewHabitPage() {
     </div>
   );
 }
+
+    

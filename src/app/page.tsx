@@ -22,6 +22,8 @@ interface Habit {
   line1Font: string;
   line2Font: string;
   stampLogo: StampIconName;
+  createdAt: string; // ISO string
+  endDate?: string; // ISO string
 }
 
 function StampCard({
@@ -99,7 +101,7 @@ function HomePageContent() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('habits', JSON.stringify(newHabits));
     }
-  }, [setHabits]);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -199,3 +201,5 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
