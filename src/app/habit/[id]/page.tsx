@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -15,6 +16,8 @@ export default function HabitPage({ params }: { params: { id: string } }) {
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
+
+  const isCameraHabit = params.id === "camera";
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -36,11 +39,27 @@ export default function HabitPage({ params }: { params: { id: string } }) {
         </Button>
       </header>
       <main className="flex-1 flex flex-col justify-between p-4">
-        <div className="bg-[#F3F0E6] rounded-lg p-6 text-black">
-          <h2 className="text-5xl font-bold font-vt323 text-[#3B6EC5]">
-            GET A NEW CAMERA
+        <div
+          className={cn(
+            "rounded-lg p-6 text-black",
+            isCameraHabit ? "bg-[#F3F0E6]" : "bg-[#F8D8D8]"
+          )}
+        >
+          <h2
+            className={cn(
+              "text-5xl font-bold",
+              isCameraHabit
+                ? "font-vt323 text-[#3B6EC5]"
+                : "font-playfair text-black"
+            )}
+          >
+            {params.id === "camera"
+              ? "GET A NEW CAMERA"
+              : "TRAVEL TO HONG KONG"}
           </h2>
-          <p className="mt-2 text-sm opacity-60">26 days | 19:10:59</p>
+          <p className="mt-2 text-sm opacity-60">
+            {isCameraHabit ? "26 days | 19:10:59" : "2m 20d | 19:10:59"}
+          </p>
           <div className="mt-6 grid grid-cols-4 gap-3">
             {Array.from({ length: 12 }).map((_, i) => {
               const day = i + 1;
@@ -52,12 +71,17 @@ export default function HabitPage({ params }: { params: { id: string } }) {
                   className={cn(
                     "aspect-square rounded-full flex items-center justify-center border-2 border-dashed",
                     isStamped
-                      ? "bg-[#3B6EC5] border-transparent"
+                      ? isCameraHabit
+                        ? "bg-[#3B6EC5] border-transparent"
+                        : "bg-pink-300 border-transparent"
                       : "border-black/20"
                   )}
                 >
                   {isStamped ? (
-                    <StampIcon name="camera" className="text-white h-6 w-6" />
+                    <StampIcon
+                      name={isCameraHabit ? "camera" : "star"}
+                      className="text-white h-6 w-6"
+                    />
                   ) : (
                     <span className="text-sm opacity-50">{day}</span>
                   )}
@@ -66,12 +90,14 @@ export default function HabitPage({ params }: { params: { id: string } }) {
             })}
           </div>
           <p className="mt-6 text-sm text-center opacity-60">
-            buy a canon g7x if you complete 12 design projects by 7th March
+            {isCameraHabit
+              ? "buy a canon g7x if you complete 12 design projects by 7th March"
+              : ""}
           </p>
         </div>
 
         <div className="py-4">
-          <Button className="w-full h-14 rounded-full bg-[#F3F0E6] text-black text-2xl font-playfair hover:bg-gray-200">
+          <Button className="w-full h-14 rounded-full bg-white text-black text-2xl font-semibold hover:bg-gray-200">
             Stamp
           </Button>
         </div>

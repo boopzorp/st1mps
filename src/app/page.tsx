@@ -1,7 +1,11 @@
+
+"use client";
+
 import Link from "next/link";
 import { Plus } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 function StampCard({
   href,
@@ -39,16 +43,35 @@ function StampCard({
   );
 }
 
-export default function HomePage() {
+function HomePageContent() {
+  const params = useSearchParams();
+  const newHabitTitle = params.get("title");
+
   return (
     <div className="min-h-screen bg-black text-white">
       <header className="flex items-center justify-between p-4">
         <h1 className="font-playfair text-4xl">Stamps</h1>
-        <Button size="icon" className="rounded-full bg-white text-black">
-          <Plus />
+        <Button
+          size="icon"
+          className="rounded-full bg-white text-black"
+          asChild
+        >
+          <Link href="/new">
+            <Plus />
+          </Link>
         </Button>
       </header>
       <main className="p-4 space-y-8">
+        {newHabitTitle && (
+          <StampCard
+            href={`/habit/${newHabitTitle.toLowerCase().replace(/ /g, "-")}`}
+            title={newHabitTitle}
+            subtitle="0 days"
+            description=""
+            cardClass="bg-zinc-800"
+            titleClass="font-sans text-white"
+          />
+        )}
         <StampCard
           href="/habit/camera"
           title="GET A NEW CAMERA"
@@ -58,7 +81,7 @@ export default function HomePage() {
           titleClass="font-vt323 text-[#3B6EC5]"
         />
         <StampCard
-          href="/habit/camera"
+          href="/habit/travel"
           title="Travel To HONG KONG"
           subtitle="2m 20d | 19:10:59"
           description=""
@@ -67,5 +90,13 @@ export default function HomePage() {
         />
       </main>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }
