@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, differenceInCalendarDays } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const fontOptions = [
   { value: "font-sans", label: "Inter (Sans-serif)" },
@@ -93,8 +94,25 @@ export default function NewHabitPage() {
     };
   });
 
+  const [matchDays, setMatchDays] = useState(false);
+
+  const timePeriodDays = formData.endDate ? differenceInCalendarDays(formData.endDate, formData.createdAt) + 1 : 0;
+
+  useEffect(() => {
+    if (matchDays && formData.endDate) {
+      const days = differenceInCalendarDays(formData.endDate, formData.createdAt) + 1;
+      if (days > 0) {
+        setFormData(prev => ({ ...prev, numStamps: days }));
+      }
+    }
+  }, [formData.endDate, matchDays, formData.createdAt]);
+
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
+    if (id === 'numStamps') {
+      setMatchDays(false);
+    }
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
@@ -141,7 +159,7 @@ export default function NewHabitPage() {
     router.push(`/?habit=${details}`);
   };
 
-  const timePeriodDays = formData.endDate ? differenceInCalendarDays(formData.endDate, formData.createdAt) + 1 : 0;
+  
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -182,7 +200,7 @@ export default function NewHabitPage() {
               <p
                 className="mt-2 text-sm opacity-60"
                 style={{ color: formData.themeColor }}
-              >{`${timePeriodDays} day${timePeriodDays !== 1 ? 's' : ''}`}</p>
+              >{`${timePeriodDays > 0 ? timePeriodDays : 0} day${timePeriodDays !== 1 ? 's' : ''}`}</p>
               <div className="mt-6 grid grid-cols-4 gap-3">
                 {Array.from({ length: Number(formData.numStamps) || 0 }).map(
                   (_, i) => (
@@ -263,11 +281,7 @@ export default function NewHabitPage() {
                 <Label htmlFor="condition">Condition</Label>
                 <Textarea id="condition" value={formData.condition} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
             </div>
-
-            <div>
-              <Label htmlFor="numStamps">Number of Stamps</Label>
-              <Input id="numStamps" type="number" value={formData.numStamps} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
-            </div>
+            
             <div>
               <Label htmlFor="endDate">End Date</Label>
               <Popover>
@@ -289,11 +303,28 @@ export default function NewHabitPage() {
                     selected={formData.endDate}
                     onSelect={handleDateChange}
                     initialFocus
+                    disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
                   />
                 </PopoverContent>
               </Popover>
             </div>
-            
+
+            <div>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="numStamps">Number of Stamps</Label>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="match-days" checked={matchDays} onCheckedChange={(checked) => setMatchDays(Boolean(checked))} />
+                        <label
+                            htmlFor="match-days"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                            Match number of days
+                        </label>
+                    </div>
+                </div>
+                <Input id="numStamps" type="number" value={formData.numStamps} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
+            </div>
+
              <div>
                 <Label htmlFor="themeColor">Theme Color</Label>
                 <Select onValueChange={(v) => handleSelectChange("themeColor", v)} value={formData.themeColor}>
