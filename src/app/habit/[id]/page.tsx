@@ -8,7 +8,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StampIcon } from "@/components/icons";
 
-export default function HabitPage({ params: { id } }: { params: { id: string } }) {
+export default function HabitPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [stamped, setStamped] = useState<number[]>([1, 2]);
 
   const toggleStamp = (day: number) => {
@@ -53,9 +54,15 @@ export default function HabitPage({ params: { id } }: { params: { id: string } }
                 : "font-playfair text-black"
             )}
           >
-            {id === "camera"
-              ? "GET A NEW CAMERA"
-              : "TRAVEL TO HONG KONG"}
+            {id === "camera" ? (
+              <>
+                <span className="font-sans">GET A NEW</span>
+                <br />
+                CAMERA
+              </>
+            ) : (
+              "TRAVEL TO HONG KONG"
+            )}
           </h2>
           <p className="mt-2 text-sm opacity-60">
             {isCameraHabit ? "26 days | 19:10:59" : "2m 20d | 19:10:59"}
@@ -89,7 +96,12 @@ export default function HabitPage({ params: { id } }: { params: { id: string } }
               );
             })}
           </div>
-          <p className="mt-6 text-sm text-center opacity-60">
+          <p
+            className={cn(
+              "mt-6 text-sm text-center opacity-60",
+              isCameraHabit && "text-[#3B6EC5]"
+            )}
+          >
             {isCameraHabit
               ? "buy a canon g7x if you complete 12 design projects by 7th March"
               : ""}
