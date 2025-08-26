@@ -26,14 +26,17 @@ export default function HabitPage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const habitDetails = searchParams.get('details');
 
-  let habit;
-  if (habitDetails) {
-    try {
-      habit = JSON.parse(decodeURIComponent(habitDetails));
-    } catch (e) {
-      console.error("Failed to parse habit details from URL", e);
+  const habit = useMemo(() => {
+    if (habitDetails) {
+      try {
+        return JSON.parse(decodeURIComponent(habitDetails));
+      } catch (e) {
+        console.error("Failed to parse habit details from URL", e);
+        return null;
+      }
     }
-  }
+    return null;
+  }, [habitDetails]);
 
   const [initialStamped, setInitialStamped] = useState<number[]>([]);
   const [stamped, setStamped] = useState<number[]>([]);
@@ -48,7 +51,9 @@ export default function HabitPage({ params }: { params: { id: string } }) {
   }, [habit]);
 
   const hasChanges = useMemo(() => {
-    return JSON.stringify(initialStamped.sort()) !== JSON.stringify(stamped.sort());
+    const sortedInitial = [...initialStamped].sort().toString();
+    const sortedCurrent = [...stamped].sort().toString();
+    return sortedInitial !== sortedCurrent;
   }, [initialStamped, stamped]);
 
 
