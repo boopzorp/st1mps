@@ -7,10 +7,20 @@ import { ChevronLeft } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StampIcon } from "@/components/icons";
+import { useSearchParams } from "next/navigation";
+
 
 export default function HabitPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const [stamped, setStamped] = useState<number[]>([1, 2]);
+  const searchParams = useSearchParams();
+  const habitDetails = searchParams.get('details');
+
+  let habit;
+  if (habitDetails) {
+    habit = JSON.parse(habitDetails);
+  }
+
+  const [stamped, setStamped] = useState<number[]>([]);
 
   const toggleStamp = (day: number) => {
     setStamped((prev) =>
@@ -18,7 +28,14 @@ export default function HabitPage({ params }: { params: { id: string } }) {
     );
   };
 
-  const isCameraHabit = id === "camera";
+  if (!habit) {
+      return (
+          <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+              <p>Habit not found.</p>
+              <Link href="/" className={cn(buttonVariants({variant: 'link'}), "mt-4")}>Go back home</Link>
+          </div>
+      )
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -43,32 +60,25 @@ export default function HabitPage({ params }: { params: { id: string } }) {
         <div
           className={cn(
             "rounded-lg p-6 text-black",
-            isCameraHabit ? "bg-[#F3F0E6]" : "bg-[#F8D8D8]"
+            habit.cardClass
           )}
         >
           <h2
             className={cn(
               "text-5xl font-bold",
-              isCameraHabit
-                ? "font-vt323 text-[#3B6EC5]"
-                : "font-playfair text-black"
+              habit.titleClass
             )}
+            style={{color: habit.textColor}}
           >
-            {id === "camera" ? (
-              <>
-                <span className="font-sans">GET A NEW</span>
-                <br />
-                CAMERA
-              </>
-            ) : (
-              "TRAVEL TO HONG KONG"
-            )}
+           <span className={cn(habit.line1Font)}>{habit.titleLine1}</span>
+           <br />
+           <span className={cn(habit.line2Font)}>{habit.titleLine2}</span>
           </h2>
           <p className="mt-2 text-sm opacity-60">
-            {isCameraHabit ? "26 days | 19:10:59" : "2m 20d | 19:10:59"}
+            {habit.subtitle}
           </p>
           <div className="mt-6 grid grid-cols-4 gap-3">
-            {Array.from({ length: 12 }).map((_, i) => {
+            {Array.from({ length: habit.numStamps }).map((_, i) => {
               const day = i + 1;
               const isStamped = stamped.includes(day);
               return (
@@ -78,19 +88,18 @@ export default function HabitPage({ params }: { params: { id: string } }) {
                   className={cn(
                     "aspect-square rounded-full flex items-center justify-center border-2 border-dashed",
                     isStamped
-                      ? isCameraHabit
-                        ? "bg-[#3B6EC5] border-transparent"
-                        : "bg-pink-300 border-transparent"
+                      ? "border-transparent"
                       : "border-black/20"
                   )}
+                  style={{backgroundColor: isStamped ? habit.textColor: 'transparent', borderColor: `${habit.textColor}40`}}
                 >
                   {isStamped ? (
                     <StampIcon
-                      name={isCameraHabit ? "camera" : "star"}
+                      name={"check"}
                       className="text-white h-6 w-6"
                     />
                   ) : (
-                    <span className="text-sm opacity-50">{day}</span>
+                    <span className="text-sm opacity-50" style={{color: habit.textColor}}>{day}</span>
                   )}
                 </button>
               );
@@ -98,13 +107,11 @@ export default function HabitPage({ params }: { params: { id: string } }) {
           </div>
           <p
             className={cn(
-              "mt-6 text-sm text-center opacity-60",
-              isCameraHabit && "text-[#3B6EC5]"
+              "mt-6 text-sm text-center opacity-60"
             )}
+            style={{color: habit.textColor}}
           >
-            {isCameraHabit
-              ? "buy a canon g7x if you complete 12 design projects by 7th March"
-              : ""}
+            {habit.description}
           </p>
         </div>
 

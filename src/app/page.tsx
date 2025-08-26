@@ -5,8 +5,22 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+
+interface Habit {
+  id: string;
+  titleLine1: string;
+  titleLine2: string;
+  subtitle: string;
+  description: string;
+  cardClass: string;
+  titleClass: string;
+  numStamps: number;
+  textColor: string;
+  line1Font: string;
+  line2Font: string;
+}
 
 function StampCard({
   href,
@@ -73,42 +87,25 @@ function StampCard({
 
 function HomePageContent() {
   const params = useSearchParams();
-  const newHabit = params.get("habit");
-  const habitData = newHabit ? JSON.parse(newHabit) : null;
+  const newHabitParam = params.get("habit");
+  const [habits, setHabits] = useState<Habit[]>([]);
 
-  const defaultHabits = [
-    {
-      id: "camera",
-      titleLine1: "GET A NEW",
-      titleLine2: "CAMERA",
-      line1Font: "font-sans",
-      line2Font: "font-vt323",
-      subtitle: "26 days | 19:10:59",
-      description:
-        "buy a canon g7x if you complete 12 design projects by 7th March",
-      cardClass: "bg-[#F3F0E6]",
-      titleClass: "",
-      numStamps: 12,
-      textColor: "#3B6EC5",
-    },
-    {
-      id: "travel",
-      titleLine1: "Travel To",
-      titleLine2: "HONG KONG",
-      line1Font: "font-playfair",
-      line2Font: "font-playfair",
-      subtitle: "2m 20d | 19:10:59",
-      description: "",
-      cardClass: "bg-[#F8D8D8]",
-      titleClass: "text-black",
-      numStamps: 12,
-      textColor: "#000000",
-    },
-  ];
-
-  const habits = habitData
-    ? [habitData, ...defaultHabits.filter((d) => d.id !== habitData.id)]
-    : defaultHabits;
+  useEffect(() => {
+    const newHabit = newHabitParam ? (JSON.parse(newHabitParam) as Habit) : null;
+    if (newHabit) {
+      setHabits((prevHabits) => {
+        const existingHabitIndex = prevHabits.findIndex(
+          (h) => h.id === newHabit.id
+        );
+        if (existingHabitIndex !== -1) {
+          const updatedHabits = [...prevHabits];
+          updatedHabits[existingHabitIndex] = newHabit;
+          return updatedHabits;
+        }
+        return [...prevHabits, newHabit];
+      });
+    }
+  }, [newHabitParam]);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -125,22 +122,20 @@ function HomePageContent() {
         </Button>
       </header>
       <main className="p-4 space-y-8">
-        {habits.map((habit) => (
-          <StampCard
-            key={habit.id}
-            href={`/habit/${habit.id}`}
-            titleLine1={habit.titleLine1}
-            titleLine2={habit.titleLine2}
-            subtitle={habit.subtitle}
-            description={habit.description}
-            cardClass={habit.cardClass}
-            titleClass={habit.titleClass}
-            numStamps={habit.numStamps}
-            textColor={habit.textColor}
-            line1Font={habit.line1Font}
-            line2Font={habit.line2Font}
-          />
-        ))}
+        {habits.length > 0 ? (
+            habits.map((habit) => (
+            <StampCard
+                key={habit.id}
+                href={`/habit/${habit.id}`}
+                {...habit}
+            />
+            ))
+        ) : (
+            <div className="text-center text-gray-500 mt-20">
+                <p>No stamps yet.</p>
+                <p>Click the '+' button to create one.</p>
+            </div>
+        )}
       </main>
     </div>
   );

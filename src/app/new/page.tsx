@@ -79,7 +79,8 @@ export default function NewHabitPage() {
       textColor: formData.themeColor,
     };
 
-    router.push(`/?habit=${encodeURIComponent(JSON.stringify(newHabit))}`);
+    const details = encodeURIComponent(JSON.stringify(newHabit))
+    router.push(`/?habit=${details}`);
   };
 
   return (
