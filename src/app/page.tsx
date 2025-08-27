@@ -333,8 +333,8 @@ function HomePageContent() {
         )}
 
         {expandedHabit && (
-            <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-                <div className="w-full max-w-md">
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-4" onClick={() => handleExpandToggle(expandedHabit.id)}>
+                <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
                     <StampCard
                         habit={expandedHabit}
                         onDelete={handleDeleteHabit}
@@ -424,5 +424,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
-    
