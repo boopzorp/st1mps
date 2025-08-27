@@ -98,9 +98,9 @@ function StampCard({
     <div
       className={cn(
         "relative rounded-lg p-6 transition-all duration-300 ease-in-out cursor-pointer",
-        isExpanded ? 'transform scale-105 shadow-2xl z-10' : 'hover:transform hover:scale-105 hover:shadow-2xl hover:z-10',
+        isExpanded ? 'transform scale-105 shadow-2xl z-20' : 'hover:transform hover:scale-105 hover:shadow-2xl hover:z-10',
         habit.cardClass,
-        isActive ? 'z-10' : 'z-0'
+        isActive && !isExpanded ? 'z-10' : 'z-0'
       )}
       onClick={handleCardClick}
     >
@@ -153,8 +153,8 @@ function StampCard({
         {habit.subtitle} | {progressPercent}% Complete
       </p>
       <div className={cn(
-        "mt-6 grid gap-3 transition-all duration-300",
-        isExpanded ? 'grid-cols-4' : 'grid-cols-4'
+        "mt-6 grid gap-3 transition-all duration-300 overflow-y-auto",
+        isExpanded ? 'grid-cols-4 max-h-60' : 'grid-cols-4'
         )}>
         {Array.from({ length: numVisibleStamps }).map((_, i) => {
           const day = i + 1;
@@ -312,8 +312,14 @@ function HomePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-        <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-black text-white relative">
+      {expandedHabitId && (
+          <div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10"
+            onClick={() => setExpandedHabitId(null)}
+          />
+        )}
+        <div className="max-w-md mx-auto relative">
       <header className="flex items-center justify-between p-4">
         <h1 className="font-playfair text-4xl">Stamps</h1>
         <Button
@@ -352,7 +358,7 @@ function HomePageContent() {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            {habits.length > 1 && (
+            {habits.length > 1 && !expandedHabitId && (
               <>
                 <CarouselPrevious className="left-[-10px] sm:left-[-20px]"/>
                 <CarouselNext className="right-[-10px] sm:right-[-20px]"/>
@@ -378,3 +384,5 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
