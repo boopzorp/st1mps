@@ -3,17 +3,19 @@
 "use client";
 
 import Link from "next/link";
-import { Ellipsis, Plus, Trash2, Edit, Award, LogOut } from "lucide-react";
+import { Ellipsis, Plus, Trash2, Edit, Award, LogOut, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { StampIcon, StampIconName } from "@/components/icons";
+import * as htmlToImage from 'html-to-image';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -38,6 +40,7 @@ import { getAuth, onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { app, db } from "@/lib/firebase";
 import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, Unsubscribe, getDoc, setDoc } from "firebase/firestore";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface Habit {
@@ -83,6 +86,9 @@ function StampCard({
   isExpanded: boolean;
   onExpand: () => void;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevent card expansion when clicking on interactive elements
     if ((e.target as HTMLElement).closest('button, [role="menuitem"], a')) {
@@ -96,9 +102,52 @@ function StampCard({
   
   const numVisibleStamps = isExpanded ? habit.numStamps : 10;
   const cardTextColor = isComplete ? '#422006' : habit.textColor;
+
+  const handleShare = useCallback(async () => {
+    if (!cardRef.current) {
+      return;
+    }
+    
+    // Temporarily remove dropdown for capture
+    const dropdown = cardRef.current.querySelector('[data-radix-dropdown-menu-trigger]');
+    if (dropdown) (dropdown as HTMLElement).style.display = 'none';
+  
+    try {
+      const dataUrl = await htmlToImage.toPng(cardRef.current, { quality: 1, pixelRatio: 2 });
+      
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], 'stamp-card.png', { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `I completed my goal: ${habit.titleLine1} ${habit.titleLine2}!`,
+          text: `I finished my stamp card for "${habit.description}".`,
+          files: [file],
+        });
+      } else {
+        // Fallback for browsers that don't support sharing files
+        const link = document.createElement('a');
+        link.download = 'stamp-card.png';
+        link.href = dataUrl;
+        link.click();
+      }
+    } catch (error) {
+      console.error('Oops, something went wrong!', error);
+      toast({
+        variant: "destructive",
+        title: "Error Sharing",
+        description: "Could not generate an image of the stamp card.",
+      });
+    } finally {
+        // Restore dropdown
+       if (dropdown) (dropdown as HTMLElement).style.display = '';
+    }
+  }, [habit, toast]);
+
   
   return (
     <div
+      ref={cardRef}
       className={cn(
         "relative rounded-lg p-6 transition-all duration-300 ease-in-out h-full flex flex-col justify-between",
         isComplete ? 'bg-gradient-to-br from-yellow-300 to-amber-400 shadow-amber-500/50' : habit.cardClass,
@@ -121,6 +170,15 @@ function StampCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {isComplete && (
+                <>
+                  <DropdownMenuItem onClick={handleShare}>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    <span>Share</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem onClick={() => onEdit(habit)}>
                 <Edit className="mr-2 h-4 w-4" />
                 <span>Edit</span>
@@ -227,54 +285,55 @@ function HomePageContent() {
   const [current, setCurrent] = useState(0)
 
   const auth = getAuth(app);
-
+  
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    let habitsUnsubscribe: Unsubscribe | undefined;
+    let prefsUnsubscribe: Unsubscribe | undefined;
+
+    const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (!currentUser) {
+      if (currentUser) {
+        // User is logged in, set up listeners
+        const userDocRef = doc(db, "users", currentUser.uid);
+        const habitsQuery = query(collection(userDocRef, "habits"));
+        habitsUnsubscribe = onSnapshot(habitsQuery, (querySnapshot) => {
+          const userHabits = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          } as Habit));
+          setHabits(userHabits);
+        }, (error) => {
+          console.error("Error fetching habits:", error);
+        });
+  
+        const userPrefsDocRef = doc(db, "user_preferences", currentUser.uid);
+        prefsUnsubscribe = onSnapshot(userPrefsDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const prefs = docSnap.data();
+            const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
+            if (selectedColor) {
+              setStickerColor(selectedColor);
+            }
+          }
+        }, (error) => {
+          console.error("Error fetching user preferences:", error);
+        });
+
+      } else {
+        // User is logged out, clean up
         setHabits([]);
+        if (habitsUnsubscribe) habitsUnsubscribe();
+        if (prefsUnsubscribe) prefsUnsubscribe();
         router.push("/signin");
       }
     });
-    return () => unsubscribe();
-  }, [auth, router]);
-  
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-  
-    const userDocRef = doc(db, "users", user.uid);
-  
-    const habitsQuery = query(collection(userDocRef, "habits"));
-    const habitsUnsubscribe = onSnapshot(habitsQuery, (querySnapshot) => {
-      const userHabits = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Habit));
-      setHabits(userHabits);
-    }, (error) => {
-      console.error("Error fetching habits:", error);
-    });
-  
-    const userPrefsDocRef = doc(db, "user_preferences", user.uid);
-    const prefsUnsubscribe = onSnapshot(userPrefsDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const prefs = docSnap.data();
-        const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
-        if (selectedColor) {
-          setStickerColor(selectedColor);
-        }
-      }
-    }, (error) => {
-      console.error("Error fetching user preferences:", error);
-    });
-  
+
     return () => {
-      habitsUnsubscribe();
-      prefsUnsubscribe();
+      authUnsubscribe();
+      if (habitsUnsubscribe) habitsUnsubscribe();
+      if (prefsUnsubscribe) prefsUnsubscribe();
     };
-  }, [user]);
+  }, [auth, router]);
 
 
   const handleDeleteHabit = useCallback(async (habitId: string) => {
@@ -418,7 +477,7 @@ function HomePageContent() {
 
         <div className="w-full max-w-lg flex-1 flex flex-col justify-center">
             <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
-                <div className="relative">
+                <div className="flex flex-col items-start">
                   <h1 className="font-playfair text-4xl">Stamps</h1>
                    <Popover>
                         <PopoverTrigger asChild>
