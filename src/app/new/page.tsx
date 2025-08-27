@@ -43,6 +43,9 @@ const colorOptions = [
   { value: "#E53E3E", label: "Red" },
   { value: "#38A169", label: "Green" },
   { value: "#DD6B20", label: "Orange" },
+  { value: "#805AD5", label: "Purple" },
+  { value: "#D53F8C", label: "Hot Pink" },
+  { value: "#00A3C4", label: "Teal" },
 ];
 
 const backgroundOptions = [
@@ -51,6 +54,9 @@ const backgroundOptions = [
   { value: "bg-zinc-800", label: "Dark Grey" },
   { value: "bg-white", label: "White" },
   { value: "bg-[#E6F4EA]", label: "Mint Green" },
+  { value: "bg-[#FEFCBF]", label: "Lemon Chiffon" },
+  { value: "bg-[#D6EAF8]", label: "Light Blue" },
+  { value: "bg-[#E8D4F5]", label: "Lavender" },
 ];
 
 const initialFormData = {
@@ -423,3 +429,5 @@ export default function NewHabitPage() {
     </div>
   );
 }
+
+    
