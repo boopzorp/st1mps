@@ -23,9 +23,59 @@ export default function SignInPage() {
       </div>
 
       <div className="container relative z-10 flex min-h-screen items-center justify-center py-12">
-        <div className="w-full max-w-md">
-          <div className="relative">
-            <div className="relative z-10 space-y-8 rounded-lg bg-zinc-900/50 p-8 sm:p-10 shadow-2xl backdrop-blur-sm">
+        <div className="grid w-full max-w-4xl grid-cols-1 md:grid-cols-2 gap-x-16">
+          <div className="relative md:flex items-center justify-center hidden">
+             <div className="relative w-full h-full">
+                <StampCard
+                    title="MORNING RUNS"
+                    subtitle="30 days of cardio"
+                    icon={Heart}
+                    stamps={10}
+                    font="font-vt323"
+                    bgColor="bg-teal-300"
+                    textColor="text-teal-950"
+                    className="absolute top-[10%] left-0 w-64 h-80 rotate-[-15deg]"
+                />
+                <StampCard
+                    title="READ EVERY DAY"
+                    subtitle="Finish 10 books"
+                    icon={Book}
+                    stamps={7}
+                    font="font-anton"
+                    bgColor="bg-rose-300"
+                    textColor="text-rose-950"
+                    className="absolute bottom-[10%] right-0 w-64 h-80 rotate-[10deg]"
+                />
+             </div>
+          </div>
+
+          <div className="w-full max-w-md mx-auto relative">
+            <div className="md:hidden absolute inset-0 flex items-center justify-center">
+               <div className="relative w-full h-full">
+                  <StampCard
+                      title="MORNING RUNS"
+                      subtitle="30 days of cardio"
+                      icon={Heart}
+                      stamps={10}
+                      font="font-vt323"
+                      bgColor="bg-teal-300"
+                      textColor="text-teal-950"
+                      className="absolute top-[-20%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90"
+                  />
+                  <StampCard
+                      title="READ EVERY DAY"
+                      subtitle="Finish 10 books"
+                      icon={Book}
+                      stamps={7}
+                      font="font-anton"
+                      bgColor="bg-rose-300"
+                      textColor="text-rose-950"
+                      className="absolute bottom-[-25%] right-[-20%] w-64 h-80 rotate-[10deg]"
+                  />
+               </div>
+            </div>
+
+            <div className="relative z-10 space-y-8 rounded-lg bg-zinc-900 p-8 sm:p-10 shadow-2xl backdrop-blur-sm md:bg-zinc-900/50">
               <div className="text-center">
                 <h1 className="font-playfair text-4xl font-bold">Welcome Back</h1>
                 <p className="mt-2 text-gray-400">Sign in to continue your journey.</p>
@@ -68,31 +118,6 @@ export default function SignInPage() {
                   Sign Up
                 </Link>
               </p>
-            </div>
-            
-            <div className="absolute inset-0 flex items-center justify-center">
-               <div className="relative w-full h-full">
-                  <StampCard
-                      title="MORNING RUNS"
-                      subtitle="30 days of cardio"
-                      icon={Heart}
-                      stamps={10}
-                      font="font-vt323"
-                      bgColor="bg-teal-300"
-                      textColor="text-teal-950"
-                      className="absolute top-[-20%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90"
-                  />
-                  <StampCard
-                      title="READ EVERY DAY"
-                      subtitle="Finish 10 books"
-                      icon={Book}
-                      stamps={7}
-                      font="font-anton"
-                      bgColor="bg-rose-300"
-                      textColor="text-rose-950"
-                      className="absolute bottom-[-25%] right-[-20%] w-64 h-80 rotate-[10deg]"
-                  />
-               </div>
             </div>
           </div>
         </div>
