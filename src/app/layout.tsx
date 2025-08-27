@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, VT323, Source_Code_Pro, Caveat, Anton } from "next/font/google";
+import { Inter, Playfair_Display, VT323, Source_Code_Pro, Caveat, Anton, Bangers, Press_Start_2P, Pacifico, Lobster } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
@@ -36,6 +36,30 @@ const fontAnton = Anton({
   weight: "400",
 });
 
+const fontBangers = Bangers({
+  subsets: ["latin"],
+  variable: "--font-bangers",
+  weight: "400",
+});
+
+const fontPressStart2P = Press_Start_2P({
+  subsets: ["latin"],
+  variable: "--font-press-start-2p",
+  weight: "400",
+});
+
+const fontPacifico = Pacifico({
+  subsets: ["latin"],
+  variable: "--font-pacifico",
+  weight: "400",
+});
+
+const fontLobster = Lobster({
+  subsets: ["latin"],
+  variable: "--font-lobster",
+  weight: "400",
+});
+
 export const metadata: Metadata = {
   title: "Stamps",
   description: "A habit tracker",
@@ -56,7 +80,11 @@ export default function RootLayout({
           fontVT323.variable,
           fontSourceCodePro.variable,
           fontCaveat.variable,
-          fontAnton.variable
+          fontAnton.variable,
+          fontBangers.variable,
+          fontPressStart2P.variable,
+          fontPacifico.variable,
+          fontLobster.variable
         )}
       >
         <div className="relative flex min-h-screen flex-col bg-background">

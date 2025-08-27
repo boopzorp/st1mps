@@ -25,6 +25,10 @@ const config = {
         "source-code-pro": ["var(--font-source-code-pro)"],
         caveat: ["var(--font-caveat)"],
         anton: ["var(--font-anton)"],
+        bangers: ["var(--font-bangers)"],
+        "press-start-2p": ["var(--font-press-start-2p)"],
+        pacifico: ["var(--font-pacifico)"],
+        lobster: ["var(--font-lobster)"],
       },
       colors: {
         border: "hsl(var(--border))",

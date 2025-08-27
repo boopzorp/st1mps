@@ -35,6 +35,10 @@ const fontOptions = [
   { value: "font-source-code-pro", label: "Source Code Pro (Mono)" },
   { value: "font-caveat", label: "Caveat (Handwritten)" },
   { value: "font-anton", label: "Anton (Display)" },
+  { value: "font-bangers", label: "Bangers (Comic)" },
+  { value: "font-press-start-2p", label: "Press Start 2P (8-Bit)" },
+  { value: "font-pacifico", label: "Pacifico (Script)" },
+  { value: "font-lobster", label: "Lobster (Bold Script)" },
 ];
 
 const colorOptions = [
@@ -46,6 +50,9 @@ const colorOptions = [
   { value: "#805AD5", label: "Purple" },
   { value: "#D53F8C", label: "Hot Pink" },
   { value: "#00A3C4", label: "Teal" },
+  { value: "#F59E0B", label: "Amber" },
+  { value: "#10B981", label: "Emerald" },
+  { value: "#6366F1", label: "Indigo" },
 ];
 
 const backgroundOptions = [
@@ -57,6 +64,10 @@ const backgroundOptions = [
   { value: "bg-[#FEFCBF]", label: "Lemon Chiffon" },
   { value: "bg-[#D6EAF8]", label: "Light Blue" },
   { value: "bg-[#E8D4F5]", label: "Lavender" },
+  { value: "bg-amber-100", label: "Light Yellow" },
+  { value: "bg-teal-100", label: "Light Teal" },
+  { value: "bg-fuchsia-200", label: "Light Fuchsia" },
+  { value: "bg-lime-200", label: "Lime" },
 ];
 
 const initialFormData = {
@@ -233,7 +244,7 @@ export default function NewHabitPage() {
               className={`rounded-lg p-6 ${formData.bgColor} shadow-lg`}
             >
               <h2
-                className={`text-3xl sm:text-4xl md:text-5xl font-bold break-words`}
+                className={`text-2xl sm:text-3xl md:text-4xl font-bold break-words`}
                 style={{ color: formData.themeColor }}
               >
                 <span className={cn(formData.line1Font)}>
@@ -429,5 +440,3 @@ export default function NewHabitPage() {
     </div>
   );
 }
-
-    
