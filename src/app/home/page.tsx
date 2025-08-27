@@ -159,7 +159,7 @@ function StampCard({
                 key={i}
                 onClick={(e) => { e.stopPropagation(); toggleStamp(day); }}
                 className={cn(
-                  "aspect-square rounded-full flex items-center justify-center border-2 border-dashed transition-all",
+                  "relative aspect-square rounded-full flex items-center justify-center border-2 border-dashed transition-all",
                   isStamped
                     ? "border-transparent"
                     : "border-black/20"
@@ -215,7 +215,7 @@ function HomePageContent() {
       localStorage.setItem('habits', JSON.stringify(newHabits));
     }
   }, []);
-  
+
   const handleDeleteHabit = useCallback((habitId: string, fromUrl = false) => {
     const updatedHabits = habits.filter(h => h.id !== habitId);
     updateHabits(updatedHabits);
@@ -240,7 +240,7 @@ function HomePageContent() {
         router.push(`/home?delete=${habitId}`, {scroll: false});
     }
   }, [habits, updateHabits, expandedHabitId, router]);
-
+  
   // Load habits and their stamped state from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
