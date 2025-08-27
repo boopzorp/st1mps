@@ -85,7 +85,6 @@ function StampCard({
   const progressPercent = habit.numStamps > 0 ? Math.round((stamped.length / habit.numStamps) * 100) : 0;
   
   const handleCardClick = (e: React.MouseEvent) => {
-    // Let clicks on buttons pass through
     if ((e.target as HTMLElement).closest('button, [role="menuitem"]')) {
       return;
     }
@@ -97,96 +96,99 @@ function StampCard({
   return (
     <div
       className={cn(
-        "relative rounded-lg p-6 transition-all duration-300 ease-in-out cursor-pointer",
+        "relative rounded-lg p-6 transition-all duration-300 ease-in-out h-full flex flex-col justify-between",
         habit.cardClass,
         isExpanded ? 'shadow-2xl' : 'hover:shadow-xl',
+        isExpanded ? '' : 'cursor-pointer'
       )}
-      onClick={handleCardClick}
+      onClick={!isExpanded ? handleCardClick : undefined}
     >
-       <div className="absolute top-2 right-2 z-30">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}}>
-              <Ellipsis className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(habit)}>
-              <Edit className="mr-2 h-4 w-4" />
-              <span>Edit</span>
-            </DropdownMenuItem>
-             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-                  <span className="text-red-500">Delete</span>
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete your
-                    stamp card and all its progress.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(habit.id)} className={cn("bg-red-500 hover:bg-red-600")}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <div>
+        <div className="absolute top-2 right-2 z-30">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}}>
+                <Ellipsis className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(habit)}>
+                <Edit className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                    <span className="text-red-500">Delete</span>
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your
+                      stamp card and all its progress.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onDelete(habit.id)} className={cn("bg-red-500 hover:bg-red-600")}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-      <h2
-        className={`text-5xl font-bold ${habit.titleClass}`}
-        style={{ color: habit.textColor }}
-      >
-        <span className={cn(habit.line1Font)}>{habit.titleLine1}</span>
-        <br />
-        <span className={cn(habit.line2Font)}>{habit.titleLine2}</span>
-      </h2>
-      <p className="mt-2 text-sm opacity-60" style={{ color: habit.textColor }}>
-        {habit.subtitle} | {progressPercent}% Complete
-      </p>
-      <div className={cn(
-        "mt-6 grid gap-3 transition-all duration-300 overflow-y-auto",
-        isExpanded ? 'grid-cols-5 max-h-60' : 'grid-cols-4'
-        )}>
-        {Array.from({ length: Math.min(habit.numStamps, numVisibleStamps) }).map((_, i) => {
-          const day = i + 1;
-          const isStamped = stamped.includes(day);
-          return (
-             <button
-              key={i}
-              onClick={(e) => { e.stopPropagation(); toggleStamp(day); }}
-              className={cn(
-                "aspect-square rounded-full flex items-center justify-center border-2 border-dashed transition-all",
-                isStamped
-                  ? "border-transparent"
-                  : "border-black/20"
-              )}
-              style={{backgroundColor: isStamped ? habit.textColor: 'transparent', borderColor: `${habit.textColor}40`}}
-            >
-              {isStamped ? (
-                <StampIcon
-                  name={habit.stampLogo || "check"}
-                  className="h-6 w-6"
-                   style={{color: habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white'}}
-                />
-              ) : (
-                <span className="text-sm opacity-50" style={{color: habit.textColor}}>{day}</span>
-              )}
-            </button>
-          )
-        })}
-         {habit.numStamps > numVisibleStamps && !isExpanded && (
-          <div className="aspect-square rounded-full flex items-center justify-center">
-             <Ellipsis style={{color: habit.textColor}} />
-          </div>
-        )}
+        <h2
+          className={`text-5xl font-bold ${habit.titleClass}`}
+          style={{ color: habit.textColor }}
+        >
+          <span className={cn(habit.line1Font)}>{habit.titleLine1}</span>
+          <br />
+          <span className={cn(habit.line2Font)}>{habit.titleLine2}</span>
+        </h2>
+        <p className="mt-2 text-sm opacity-60" style={{ color: habit.textColor }}>
+          {habit.subtitle} | {progressPercent}% Complete
+        </p>
+        <div className={cn(
+          "mt-6 grid gap-3 transition-all duration-300 overflow-y-auto",
+          isExpanded ? 'grid-cols-5 max-h-60' : 'grid-cols-4'
+          )}>
+          {Array.from({ length: Math.min(habit.numStamps, numVisibleStamps) }).map((_, i) => {
+            const day = i + 1;
+            const isStamped = stamped.includes(day);
+            return (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); toggleStamp(day); }}
+                className={cn(
+                  "aspect-square rounded-full flex items-center justify-center border-2 border-dashed transition-all",
+                  isStamped
+                    ? "border-transparent"
+                    : "border-black/20"
+                )}
+                style={{backgroundColor: isStamped ? habit.textColor: 'transparent', borderColor: `${habit.textColor}40`}}
+              >
+                {isStamped ? (
+                  <StampIcon
+                    name={habit.stampLogo || "check"}
+                    className="h-6 w-6"
+                    style={{color: habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white'}}
+                  />
+                ) : (
+                  <span className="text-sm opacity-50" style={{color: habit.textColor}}>{day}</span>
+                )}
+              </button>
+            )
+          })}
+          {habit.numStamps > numVisibleStamps && !isExpanded && (
+            <div className="aspect-square rounded-full flex items-center justify-center">
+              <Ellipsis style={{color: habit.textColor}} />
+            </div>
+          )}
+        </div>
       </div>
       <p
         className="mt-6 text-sm text-center opacity-60"
@@ -197,6 +199,7 @@ function StampCard({
     </div>
   );
 }
+
 
 function HomePageContent() {
   const router = useRouter();
@@ -219,7 +222,14 @@ function HomePageContent() {
     if (typeof window !== 'undefined') {
       const savedHabits = localStorage.getItem('habits');
       if (savedHabits) {
-        setHabits(JSON.parse(savedHabits));
+        try {
+          const parsedHabits = JSON.parse(savedHabits);
+          if (Array.isArray(parsedHabits)) {
+            setHabits(parsedHabits);
+          }
+        } catch (e) {
+          console.error("Failed to parse habits from localStorage", e);
+        }
       }
     }
   }, []);
@@ -233,7 +243,7 @@ function HomePageContent() {
  
     const handleSelect = () => {
       setCurrent(api.selectedScrollSnap())
-      setExpandedHabitId(null); // Collapse any expanded card when swiping
+      setExpandedHabitId(null);
     }
     
     api.on("select", handleSelect)
@@ -257,7 +267,6 @@ function HomePageContent() {
             if (existingHabitIndex !== -1) {
                 updatedHabits = [...prevHabits];
                 const oldHabit = updatedHabits[existingHabitIndex];
-                // If ID is new but root is same, it's an edit, so remove old stamps
                 if (oldHabit.id !== newHabit.id) {
                    if (typeof window !== 'undefined') {
                       localStorage.removeItem(`stamps_${oldHabit.id}`);
@@ -273,8 +282,7 @@ function HomePageContent() {
             }
             return updatedHabits;
         });
-
-        // Clean the URL
+        
         router.replace('/', {scroll: false});
 
       } catch (error) {
@@ -300,6 +308,7 @@ function HomePageContent() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(`stamps_${habitId}`);
     }
+    setExpandedHabitId(null); // Close if expanded
   };
 
   const handleEditHabit = (habit: Habit) => {
@@ -311,98 +320,102 @@ function HomePageContent() {
     setExpandedHabitId(prevId => prevId === habitId ? null : habitId);
   }
 
+  const expandedHabit = habits.find(h => h.id === expandedHabitId);
+
   return (
     <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center overflow-hidden">
-      {expandedHabitId && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-10"
-          onClick={() => setExpandedHabitId(null)}
-        />
-      )}
-      
-      <div className="w-full max-w-md flex-1 flex flex-col justify-center">
-        <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
-          <h1 className="font-playfair text-4xl">Stamps</h1>
-          <Button
-            size="icon"
-            className="rounded-full bg-white text-black"
-            asChild
-          >
-            <Link href="/new">
-              <Plus />
-            </Link>
-          </Button>
-        </header>
+        
+        {expandedHabitId && (
+            <div 
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+                onClick={() => setExpandedHabitId(null)}
+            />
+        )}
 
-        <main className="p-4 flex-1 flex items-center">
-          {habits.length > 0 ? (
-            <Carousel 
-              setApi={setApi}
-              opts={{
-                align: "center",
-                loop: false,
-              }}
-              className="w-full h-full"
-            >
-              <CarouselContent className="-ml-4 h-full">
-                {habits.map((habit, index) => {
-                  const isExpanded = expandedHabitId === habit.id;
-                  const zIndex = isExpanded ? 20 : habits.length - Math.abs(index - current);
-                  
-                  return (
-                    <CarouselItem 
-                      key={habit.id} 
-                      className={cn("pl-4 transition-all duration-500 ease-in-out",
-                        isExpanded ? 'basis-full' : 'basis-5/6'
-                      )}
-                      style={{ zIndex }}
-                    >
-                      <div className={cn(
-                          "h-full w-full transition-all duration-500 ease-in-out flex items-center justify-center",
-                          isExpanded && "fixed inset-0"
-                        )}
-                        onClick={isExpanded ? (e) => {
-                          if (e.target === e.currentTarget) {
-                            handleExpandToggle(habit.id)
-                          }
-                        } : undefined}
-                      >
-                         <div className={cn(
-                           "w-full transition-all duration-500 ease-in-out",
-                           isExpanded ? "max-w-md" : `max-w-sm ${index !== current ? 'scale-90 opacity-70' : ''}`,
-                          )}>
-                          <StampCard
-                            habit={habit}
-                            onDelete={handleDeleteHabit}
-                            onEdit={handleEditHabit}
-                            isExpanded={isExpanded}
-                            onExpand={() => handleExpandToggle(habit.id)}
-                            isActive={index === current}
-                          />
-                        </div>
-                      </div>
-                    </CarouselItem>
-                  )
-                })}
-              </CarouselContent>
-              {!expandedHabitId && (
-                <>
-                  <CarouselPrevious className="left-[-10px] sm:left-[-20px] z-20"/>
-                  <CarouselNext className="right-[-10px] sm:right-[-20px] z-20"/>
-                </>
-              )}
-            </Carousel>
-          ) : (
-            <div className="text-center text-gray-500 mt-20">
-              <p>No stamps yet.</p>
-              <p>Click the '+' button to create one.</p>
+        {expandedHabit && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+                <div className="w-full max-w-md">
+                    <StampCard
+                        habit={expandedHabit}
+                        onDelete={handleDeleteHabit}
+                        onEdit={handleEditHabit}
+                        isExpanded={true}
+                        onExpand={() => handleExpandToggle(expandedHabit.id)}
+                        isActive={true}
+                    />
+                </div>
             </div>
-          )}
-        </main>
-      </div>
+        )}
+
+        <div className="w-full max-w-lg flex-1 flex flex-col justify-center">
+            <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
+                <h1 className="font-playfair text-4xl">Stamps</h1>
+                <Button
+                    size="icon"
+                    className="rounded-full bg-white text-black"
+                    asChild
+                >
+                    <Link href="/new">
+                        <Plus />
+                    </Link>
+                </Button>
+            </header>
+
+            <main className="p-4 flex-1 flex items-center">
+                {habits.length > 0 ? (
+                    <Carousel 
+                        setApi={setApi}
+                        opts={{
+                            align: "center",
+                            loop: false,
+                        }}
+                        className="w-full"
+                    >
+                        <CarouselContent className="-ml-4">
+                            {habits.map((habit, index) => (
+                                <CarouselItem 
+                                    key={habit.id} 
+                                    className={cn(
+                                        "pl-4 transition-opacity duration-300",
+                                        "basis-5/6",
+                                        expandedHabitId && expandedHabitId !== habit.id ? 'opacity-0' : 'opacity-100'
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "transition-all duration-300",
+                                        index !== current ? 'scale-90 opacity-70' : 'scale-100 opacity-100',
+                                    )}>
+                                        <StampCard
+                                            habit={habit}
+                                            onDelete={handleDeleteHabit}
+                                            onEdit={handleEditHabit}
+                                            isExpanded={false}
+                                            onExpand={() => handleExpandToggle(habit.id)}
+                                            isActive={index === current}
+                                        />
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        {!expandedHabitId && habits.length > 1 && (
+                            <>
+                                <CarouselPrevious className="left-[-5px] sm:left-[-15px] z-20"/>
+                                <CarouselNext className="right-[-5px] sm:right-[-15px] z-20"/>
+                            </>
+                        )}
+                    </Carousel>
+                ) : (
+                    <div className="text-center text-gray-500 w-full">
+                        <p>No stamps yet.</p>
+                        <p>Click the '+' button to create one.</p>
+                    </div>
+                )}
+            </main>
+        </div>
     </div>
   );
 }
+
 
 export default function HomePage() {
   return (
