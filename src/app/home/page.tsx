@@ -288,15 +288,6 @@ function HomePageContent() {
     }
   }, [newHabitParam, router]);
   
-  // Handle deleting habits from URL (less common, but good to have)
-  useEffect(() => {
-    if(habitToDeleteParam) {
-      handleDeleteHabit(habitToDeleteParam, true);
-      router.replace('/home', {scroll: false});
-    }
-  }, [habitToDeleteParam, router, handleDeleteHabit]);
-
-
   const handleDeleteHabit = useCallback((habitId: string, fromUrl = false) => {
     const updatedHabits = habits.filter(h => h.id !== habitId);
     updateHabits(updatedHabits);
@@ -321,6 +312,15 @@ function HomePageContent() {
         router.push(`/home?delete=${habitId}`, {scroll: false});
     }
   }, [habits, updateHabits, expandedHabitId, router]);
+
+  // Handle deleting habits from URL (less common, but good to have)
+  useEffect(() => {
+    if(habitToDeleteParam) {
+      handleDeleteHabit(habitToDeleteParam, true);
+      router.replace('/home', {scroll: false});
+    }
+  }, [habitToDeleteParam, router, handleDeleteHabit]);
+
 
   const handleEditHabit = (habit: Habit) => {
     const details = encodeURIComponent(JSON.stringify(habit));
