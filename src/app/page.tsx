@@ -92,18 +92,18 @@ function StampCard({
     onExpand();
   }
 
-  const numVisibleStamps = isExpanded ? habit.numStamps : 11;
+  const numVisibleStamps = isExpanded ? habit.numStamps : 10;
 
   return (
     <div
       className={cn(
         "relative rounded-lg p-6 transition-all duration-300 ease-in-out cursor-pointer",
-        isExpanded ? 'transform scale-105 shadow-2xl z-20' : 'hover:transform hover:scale-105 hover:shadow-2xl',
-        habit.cardClass
+        habit.cardClass,
+        isExpanded ? 'shadow-2xl' : 'hover:shadow-xl',
       )}
       onClick={handleCardClick}
     >
-       <div className="absolute top-2 right-2 z-20">
+       <div className="absolute top-2 right-2 z-30">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}}>
@@ -153,9 +153,9 @@ function StampCard({
       </p>
       <div className={cn(
         "mt-6 grid gap-3 transition-all duration-300 overflow-y-auto",
-        isExpanded ? 'grid-cols-4 max-h-60' : 'grid-cols-4'
+        isExpanded ? 'grid-cols-5 max-h-60' : 'grid-cols-4'
         )}>
-        {Array.from({ length: numVisibleStamps }).map((_, i) => {
+        {Array.from({ length: Math.min(habit.numStamps, numVisibleStamps) }).map((_, i) => {
           const day = i + 1;
           const isStamped = stamped.includes(day);
           return (
@@ -182,7 +182,7 @@ function StampCard({
             </button>
           )
         })}
-         {habit.numStamps > 11 && !isExpanded && (
+         {habit.numStamps > numVisibleStamps && !isExpanded && (
           <div className="aspect-square rounded-full flex items-center justify-center">
              <Ellipsis style={{color: habit.textColor}} />
           </div>
@@ -233,6 +233,7 @@ function HomePageContent() {
  
     const handleSelect = () => {
       setCurrent(api.selectedScrollSnap())
+      setExpandedHabitId(null); // Collapse any expanded card when swiping
     }
     
     api.on("select", handleSelect)
@@ -311,15 +312,16 @@ function HomePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center overflow-hidden">
       {expandedHabitId && (
         <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-10"
           onClick={() => setExpandedHabitId(null)}
         />
       )}
-      <div className="w-full max-w-md relative">
-        <header className="flex items-center justify-between p-4">
+      
+      <div className="w-full max-w-md flex-1 flex flex-col justify-center">
+        <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
           <h1 className="font-playfair text-4xl">Stamps</h1>
           <Button
             size="icon"
@@ -331,7 +333,8 @@ function HomePageContent() {
             </Link>
           </Button>
         </header>
-        <main className="p-4">
+
+        <main className="p-4 flex-1 flex items-center">
           {habits.length > 0 ? (
             <Carousel 
               setApi={setApi}
@@ -339,39 +342,53 @@ function HomePageContent() {
                 align: "center",
                 loop: false,
               }}
-              className="w-full"
+              className="w-full h-full"
             >
-              <CarouselContent className="-ml-1">
-                {habits.map((habit, index) => (
-                  <CarouselItem 
-                    key={habit.id} 
-                    className={cn(
-                      "pl-1 md:basis-full transition-transform duration-300 ease-out", 
-                      expandedHabitId === habit.id ? 'z-20' : `z-${10 - Math.abs(index-current)}`
-                    )} 
-                    style={{
-                      transform: expandedHabitId === habit.id 
-                        ? 'translateY(-50%) scale(1)' 
-                        : `translateX(${(index - current) * 10}px) scale(${1 - Math.abs(index-current) * 0.1})`,
-                    }}
-                  >
-                    <div className={cn("p-1", expandedHabitId === habit.id && "fixed top-1/2 left-1/2 w-full max-w-md -translate-x-1/2")}>
-                      <StampCard
-                        habit={habit}
-                        onDelete={handleDeleteHabit}
-                        onEdit={handleEditHabit}
-                        isExpanded={expandedHabitId === habit.id}
-                        onExpand={() => handleExpandToggle(habit.id)}
-                        isActive={index === current}
-                      />
-                    </div>
-                  </CarouselItem>
-                ))}
+              <CarouselContent className="-ml-4 h-full">
+                {habits.map((habit, index) => {
+                  const isExpanded = expandedHabitId === habit.id;
+                  const zIndex = isExpanded ? 20 : habits.length - Math.abs(index - current);
+                  
+                  return (
+                    <CarouselItem 
+                      key={habit.id} 
+                      className={cn("pl-4 transition-all duration-500 ease-in-out",
+                        isExpanded ? 'basis-full' : 'basis-5/6'
+                      )}
+                      style={{ zIndex }}
+                    >
+                      <div className={cn(
+                          "h-full w-full transition-all duration-500 ease-in-out flex items-center justify-center",
+                          isExpanded && "fixed inset-0"
+                        )}
+                        onClick={isExpanded ? (e) => {
+                          if (e.target === e.currentTarget) {
+                            handleExpandToggle(habit.id)
+                          }
+                        } : undefined}
+                      >
+                         <div className={cn(
+                           "w-full transition-all duration-500 ease-in-out",
+                           isExpanded ? "max-w-md" : `max-w-sm ${index !== current ? 'scale-90 opacity-70' : ''}`,
+                          )}>
+                          <StampCard
+                            habit={habit}
+                            onDelete={handleDeleteHabit}
+                            onEdit={handleEditHabit}
+                            isExpanded={isExpanded}
+                            onExpand={() => handleExpandToggle(habit.id)}
+                            isActive={index === current}
+                          />
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  )
+                })}
               </CarouselContent>
-              {habits.length > 1 && !expandedHabitId && (
+              {!expandedHabitId && (
                 <>
-                  <CarouselPrevious className="left-[-10px] sm:left-[-20px]"/>
-                  <CarouselNext className="right-[-10px] sm:right-[-20px]"/>
+                  <CarouselPrevious className="left-[-10px] sm:left-[-20px] z-20"/>
+                  <CarouselNext className="right-[-10px] sm:right-[-20px] z-20"/>
                 </>
               )}
             </Carousel>
@@ -394,3 +411,5 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
