@@ -335,11 +335,14 @@ function HomePageContent() {
         
         {expandedHabit && (
             <div 
-              className="fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300"
+              className={cn(
+                "fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300",
+                 expandedHabitId ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+              )}
               onClick={() => handleExpandToggle(expandedHabit.id)}
             >
                 <div 
-                  className="w-full max-w-md transition-all duration-300" 
+                  className="w-full max-w-md" 
                   onClick={(e) => e.stopPropagation()}
                 >
                     <StampCard
