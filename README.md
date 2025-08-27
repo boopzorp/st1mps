@@ -1,5 +1,3 @@
-# Firebase Studio
+Stamps | A Habit app.
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+Tried to make it a fun experience.
