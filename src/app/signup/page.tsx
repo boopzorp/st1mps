@@ -56,10 +56,10 @@ export default function SignUpPage() {
         />
       </div>
 
-       <div className="container relative z-10 flex min-h-screen items-center justify-center py-12">
+       <div className="container relative z-10 flex min-h-screen items-center justify-center py-24 sm:py-12">
         <div className="grid w-full max-w-4xl grid-cols-1 md:grid-cols-2 gap-x-16">
           <div className="relative hidden md:flex md:items-center md:justify-center">
-             <div className="relative w-full h-full">
+            <div className="relative w-full h-full">
                 <StampCard
                     title="PRACTICE GUITAR"
                     subtitle="100 hours of practice"
@@ -68,7 +68,7 @@ export default function SignUpPage() {
                     font="font-caveat"
                     bgColor="bg-amber-300"
                     textColor="text-amber-950"
-                    className="absolute top-[10%] left-0 w-64 h-80 rotate-[-15deg]"
+                    className="absolute top-[5%] left-[-5%] w-64 h-80 rotate-[-15deg]"
                 />
                 <StampCard
                     title="DRINK WATER"
@@ -78,7 +78,7 @@ export default function SignUpPage() {
                     font="font-sans"
                     bgColor="bg-sky-300"
                     textColor="text-sky-950"
-                    className="absolute bottom-[10%] right-0 w-64 h-80 rotate-[10deg]"
+                    className="absolute bottom-[5%] right-[-5%] w-64 h-80 rotate-[10deg]"
                 />
              </div>
           </div>
@@ -94,7 +94,7 @@ export default function SignUpPage() {
                           font="font-caveat"
                           bgColor="bg-amber-300"
                           textColor="text-amber-950"
-                          className="absolute top-[-20%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90 opacity-40"
+                          className="absolute top-[-25%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90 opacity-20"
                       />
                       <StampCard
                           title="DRINK WATER"
@@ -104,7 +104,7 @@ export default function SignUpPage() {
                           font="font-sans"
                           bgColor="bg-sky-300"
                           textColor="text-sky-950"
-                          className="absolute bottom-[-25%] right-[-20%] w-64 h-80 rotate-[10deg] opacity-40"
+                          className="absolute bottom-[-30%] right-[-20%] w-64 h-80 rotate-[10deg] opacity-20"
                       />
                   </div>
               </div>
