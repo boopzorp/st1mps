@@ -151,7 +151,7 @@ function StampCard({
 
         <h2
           className={cn(
-            `text-3xl sm:text-4xl md:text-5xl font-bold break-words`,
+            "text-2xl sm:text-3xl md:text-4xl font-bold break-words",
             habit.titleClass
           )}
           style={{ color: cardTextColor }}
@@ -241,10 +241,9 @@ function HomePageContent() {
   useEffect(() => {
     if (!user) return;
 
-    const habitsCollectionRef = collection(db, "users", user.uid, "habits");
-    const q = query(habitsCollectionRef);
+    const habitsQuery = query(collection(db, "users", user.uid, "habits"));
 
-    const unsubscribeHabits = onSnapshot(q, (querySnapshot) => {
+    const unsubscribeHabits = onSnapshot(habitsQuery, (querySnapshot) => {
       const userHabits = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -516,4 +515,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
