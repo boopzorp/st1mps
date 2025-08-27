@@ -59,8 +59,8 @@ const StampCard = ({
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-zinc-900 text-white overflow-x-hidden">
-      <div className="relative isolate">
+    <div className="min-h-screen bg-zinc-900 text-white flex flex-col">
+      <div className="relative isolate flex-1">
         <div
           className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
           aria-hidden="true"
@@ -100,8 +100,9 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   className="rounded-full bg-indigo-500 hover:bg-indigo-400 text-lg"
+                  asChild
                 >
-                  Get Started for Free
+                  <Link href="/home">Get Started for Free</Link>
                 </Button>
               </div>
             </div>
@@ -109,7 +110,7 @@ export default function LandingPage() {
 
           <div className="relative mt-16 sm:mt-24 pb-20">
             <div className="lg:mx-auto lg:max-w-7xl lg:px-8">
-              <div className="relative h-[60rem] sm:h-[45rem] overflow-hidden">
+              <div className="relative h-[80rem] sm:h-[55rem] overflow-hidden">
                 <div className="absolute top-0 grid h-full w-full grid-cols-2 gap-6 p-6">
                   <div className="flex flex-col gap-6">
                     <StampCard
@@ -176,12 +177,15 @@ export default function LandingPage() {
                     />
                   </div>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/80 to-transparent"></div>
               </div>
             </div>
           </div>
         </main>
       </div>
+      <footer className="w-full text-center p-4 text-gray-500 text-sm">
+        <p>&copy; {new Date().getFullYear()} Stamps. Made with ❤️.</p>
+      </footer>
     </div>
   );
 }
