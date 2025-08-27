@@ -94,7 +94,7 @@ export default function SignUpPage() {
                           font="font-caveat"
                           bgColor="bg-amber-300"
                           textColor="text-amber-950"
-                          className="absolute top-[-20%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90"
+                          className="absolute top-[-20%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90 opacity-40"
                       />
                       <StampCard
                           title="DRINK WATER"
@@ -104,7 +104,7 @@ export default function SignUpPage() {
                           font="font-sans"
                           bgColor="bg-sky-300"
                           textColor="text-sky-950"
-                          className="absolute bottom-[-25%] right-[-20%] w-64 h-80 rotate-[10deg]"
+                          className="absolute bottom-[-25%] right-[-20%] w-64 h-80 rotate-[10deg] opacity-40"
                       />
                   </div>
               </div>

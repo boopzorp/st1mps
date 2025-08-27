@@ -92,7 +92,7 @@ export default function SignInPage() {
                       font="font-vt323"
                       bgColor="bg-teal-300"
                       textColor="text-teal-950"
-                      className="absolute top-[-20%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90"
+                      className="absolute top-[-20%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90 opacity-40"
                   />
                   <StampCard
                       title="READ EVERY DAY"
@@ -102,7 +102,7 @@ export default function SignInPage() {
                       font="font-anton"
                       bgColor="bg-rose-300"
                       textColor="text-rose-950"
-                      className="absolute bottom-[-25%] right-[-20%] w-64 h-80 rotate-[10deg]"
+                      className="absolute bottom-[-25%] right-[-20%] w-64 h-80 rotate-[10deg] opacity-40"
                   />
                </div>
             </div>
