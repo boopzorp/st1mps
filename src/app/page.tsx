@@ -98,9 +98,8 @@ function StampCard({
     <div
       className={cn(
         "relative rounded-lg p-6 transition-all duration-300 ease-in-out cursor-pointer",
-        isExpanded ? 'transform scale-105 shadow-2xl z-20' : 'hover:transform hover:scale-105 hover:shadow-2xl hover:z-10',
-        habit.cardClass,
-        isActive && !isExpanded ? 'z-10' : 'z-0'
+        isExpanded ? 'transform scale-105 shadow-2xl z-20' : 'hover:transform hover:scale-105 hover:shadow-2xl',
+        habit.cardClass
       )}
       onClick={handleCardClick}
     >
@@ -344,7 +343,7 @@ function HomePageContent() {
           >
             <CarouselContent className="-ml-1">
               {habits.map((habit, index) => (
-                <CarouselItem key={habit.id} className="pl-1 md:basis-full" style={{transform: `translateX(${(index - current) * 10}px) scale(${1 - Math.abs(index-current) * 0.1})`, transition: 'transform 0.3s ease-out', zIndex: habits.length - Math.abs(index-current)}}>
+                <CarouselItem key={habit.id} className={cn("pl-1 md:basis-full transition-transform duration-300 ease-out", expandedHabitId === habit.id && 'z-20')} style={{transform: `translateX(${(index - current) * 10}px) scale(${1 - Math.abs(index-current) * 0.1})`, zIndex: habits.length - Math.abs(index-current)}}>
                   <div className="p-1">
                     <StampCard
                       habit={habit}
@@ -384,5 +383,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
-    
