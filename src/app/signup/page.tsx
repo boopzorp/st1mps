@@ -43,10 +43,15 @@ export default function SignUpPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!username) {
+        setError("Please enter a username before signing up with Google.");
+        return;
+    }
     setGoogleLoading(true);
     setError('');
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      await updateProfile(result.user, { displayName: username });
       router.push('/home');
     } catch (err: any) {
       setError(err.message);
