@@ -208,15 +208,7 @@ export default function HabitPage({ params }: { params: { id: string } }) {
           </p>
         </div>
 
-        <div className="py-4">
-          <Button
-            className="w-full h-14 rounded-full bg-white text-black text-2xl font-semibold hover:bg-gray-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            onClick={saveProgress}
-            disabled={!hasChanges}
-          >
-            Save Progress
-          </Button>
-        </div>
+        
       </main>
       </div>
     </div>

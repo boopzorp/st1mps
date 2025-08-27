@@ -2,12 +2,29 @@
 "use client";
 
 import Link from "next/link";
-import { Ellipsis, Plus } from "lucide-react";
+import { Ellipsis, Plus, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { StampIconName } from "@/components/icons";
+import { StampIcon, StampIconName } from "@/components/icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Habit {
   id: string;
@@ -27,74 +44,131 @@ interface Habit {
 }
 
 function StampCard({
-  href,
-  titleLine1,
-  titleLine2,
-  titleClass,
-  subtitle,
-  description,
-  cardClass,
-  numStamps,
-  textColor,
-  line1Font,
-  line2Font,
+  habit,
+  onUpdateStamps,
+  onDelete,
+  onEdit,
 }: {
-  href: string;
-  titleLine1: string;
-  titleLine2: string;
-  subtitle: string;
-  description: string;
-  cardClass: string;
-  titleClass: string;
-  numStamps: number;
-  textColor: string;
-  line1Font: string;
-  line2Font: string;
+  habit: Habit;
+  onUpdateStamps: (habitId: string, stamps: number[]) => void;
+  onDelete: (habitId: string) => void;
+  onEdit: (habit: Habit) => void;
 }) {
-  const displayStamps = numStamps > 12 ? 11 : numStamps;
+  const [stamped, setStamped] = useState<number[]>([]);
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
+    setStamped(savedStamps ? JSON.parse(savedStamps) : []);
+  }, [habit.id]);
+
+  const toggleStamp = (day: number) => {
+    const newStamped = stamped.includes(day)
+      ? stamped.filter((d) => d !== day)
+      : [...stamped, day];
+    setStamped(newStamped);
+    onUpdateStamps(habit.id, newStamped);
+  };
+  
+  const handleCardClick = () => {
+    setIsActive(true);
+  };
+  
+  const handleMouseLeave = () => {
+    setIsActive(false);
+  };
+
   return (
-    <Link href={href} className="block">
-      <div className={`rounded-lg p-6 ${cardClass}`}>
-        <h2
-          className={`text-5xl font-bold ${titleClass}`}
-          style={{ color: textColor }}
-        >
-          <span className={cn(line1Font)}>{titleLine1}</span>
-          <br />
-          <span className={cn(line2Font)}>{titleLine2}</span>
-        </h2>
-        <p className="mt-2 text-sm opacity-60" style={{ color: textColor }}>
-          {subtitle}
-        </p>
-        <div className="mt-6 grid grid-cols-4 gap-3">
-          {Array.from({ length: displayStamps }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-square rounded-full border-2 border-dashed flex items-center justify-center"
-              style={{ borderColor: `${textColor}40` }}
-            >
-              <span className="text-sm opacity-50" style={{ color: textColor }}>
-                {i + 1}
-              </span>
-            </div>
-          ))}
-          {numStamps > 12 && (
-             <div
-              className="aspect-square rounded-full border-2 border-dashed flex items-center justify-center"
-              style={{ borderColor: `${textColor}40` }}
-            >
-              <Ellipsis className="h-6 w-6" style={{ color: textColor, opacity: 0.5 }}/>
-            </div>
-          )}
-        </div>
-        <p
-          className="mt-6 text-sm text-center opacity-60"
-          style={{ color: textColor }}
-        >
-          {description}
-        </p>
+    <div
+      className={`relative rounded-lg p-6 transition-transform duration-300 ${isActive ? 'transform scale-105 shadow-2xl z-10' : ''} ${habit.cardClass}`}
+      onClick={handleCardClick}
+      onMouseLeave={handleMouseLeave}
+    >
+       <div className="absolute top-2 right-2 z-20">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}}>
+              <Ellipsis className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={(e) => {e.stopPropagation(); onEdit(habit)}}>
+              <Edit className="mr-2 h-4 w-4" />
+              <span>Edit</span>
+            </DropdownMenuItem>
+             <AlertDialog>
+              <AlertDialogTrigger asChild>
+                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                  <span className="text-red-500">Delete</span>
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your
+                    stamp card and all its progress.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(habit.id)}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </Link>
+
+      <h2
+        className={`text-5xl font-bold ${habit.titleClass}`}
+        style={{ color: habit.textColor }}
+      >
+        <span className={cn(habit.line1Font)}>{habit.titleLine1}</span>
+        <br />
+        <span className={cn(habit.line2Font)}>{habit.titleLine2}</span>
+      </h2>
+      <p className="mt-2 text-sm opacity-60" style={{ color: habit.textColor }}>
+        {habit.subtitle}
+      </p>
+      <div className="mt-6 grid grid-cols-4 gap-3">
+        {Array.from({ length: habit.numStamps }).map((_, i) => {
+          const day = i + 1;
+          const isStamped = stamped.includes(day);
+          return (
+             <button
+              key={i}
+              onClick={(e) => {e.stopPropagation(); toggleStamp(day)}}
+              className={cn(
+                "aspect-square rounded-full flex items-center justify-center border-2 border-dashed transition-all",
+                isStamped
+                  ? "border-transparent"
+                  : "border-black/20",
+                isActive ? 'scale-110' : ''
+              )}
+              style={{backgroundColor: isStamped ? habit.textColor: 'transparent', borderColor: `${habit.textColor}40`}}
+            >
+              {isStamped ? (
+                <StampIcon
+                  name={habit.stampLogo || "check"}
+                  className="h-6 w-6"
+                   style={{color: habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white'}}
+                />
+              ) : (
+                <span className="text-sm opacity-50" style={{color: habit.textColor}}>{day}</span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+      <p
+        className="mt-6 text-sm text-center opacity-60"
+        style={{ color: habit.textColor }}
+      >
+        {habit.description}
+      </p>
+    </div>
   );
 }
 
@@ -102,10 +176,10 @@ function HomePageContent() {
   const router = useRouter();
   const params = useSearchParams();
   const newHabitParam = params.get("habit");
-  const habitToDelete = params.get("delete");
+  const habitToDeleteParam = params.get("delete");
   const [habits, setHabits] = useState<Habit[]>([]);
 
-   const updateHabits = useCallback((newHabits: Habit[]) => {
+  const updateHabits = useCallback((newHabits: Habit[]) => {
     setHabits(newHabits);
     if (typeof window !== 'undefined') {
       localStorage.setItem('habits', JSON.stringify(newHabits));
@@ -135,7 +209,6 @@ function HomePageContent() {
             if (existingHabitIndex !== -1) {
                 updatedHabits = [...prevHabits];
                 const oldHabit = updatedHabits[existingHabitIndex];
-                // if id is different, it means it's a new habit from an edit
                 if (oldHabit.id !== newHabit.id) {
                    if (typeof window !== 'undefined') {
                       localStorage.removeItem(`stamps_${oldHabit.id}`);
@@ -152,7 +225,6 @@ function HomePageContent() {
             return updatedHabits;
         });
 
-        // clean up the URL
         router.replace('/', {scroll: false});
 
       } catch (error) {
@@ -162,15 +234,32 @@ function HomePageContent() {
   }, [newHabitParam, router]);
 
   useEffect(() => {
-    if(habitToDelete) {
-      const updatedHabits = habits.filter(h => h.id !== habitToDelete);
+    if(habitToDeleteParam) {
+      const updatedHabits = habits.filter(h => h.id !== habitToDeleteParam);
       updateHabits(updatedHabits);
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(`stamps_${habitToDelete}`);
+        localStorage.removeItem(`stamps_${habitToDeleteParam}`);
       }
       router.replace('/', {scroll: false});
     }
-  }, [habitToDelete, habits, updateHabits, router]);
+  }, [habitToDeleteParam, habits, updateHabits, router]);
+
+  const handleUpdateStamps = (habitId: string, newStamps: number[]) => {
+    localStorage.setItem(`stamps_${habitId}`, JSON.stringify(newStamps));
+  };
+  
+  const handleDeleteHabit = (habitId: string) => {
+    const updatedHabits = habits.filter(h => h.id !== habitId);
+    updateHabits(updatedHabits);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(`stamps_${habitId}`);
+    }
+  };
+
+  const handleEditHabit = (habit: Habit) => {
+    const details = encodeURIComponent(JSON.stringify(habit));
+    router.push(`/new?habit=${details}`);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -189,16 +278,15 @@ function HomePageContent() {
       </header>
       <main className="p-4 space-y-8">
         {habits.length > 0 ? (
-          habits.map((habit) => {
-            const details = encodeURIComponent(JSON.stringify(habit));
-            return (
-              <StampCard
-                key={habit.id}
-                href={`/habit/${habit.id}?details=${details}`}
-                {...habit}
-              />
-            );
-          })
+          habits.map((habit) => (
+            <StampCard
+              key={habit.id}
+              habit={habit}
+              onUpdateStamps={handleUpdateStamps}
+              onDelete={handleDeleteHabit}
+              onEdit={handleEditHabit}
+            />
+          ))
         ) : (
           <div className="text-center text-gray-500 mt-20">
             <p>No stamps yet.</p>
