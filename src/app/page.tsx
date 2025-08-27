@@ -63,43 +63,31 @@ function StampCard({
   onEdit: (habit: Habit) => void;
 }) {
   const [stamped, setStamped] = useState<number[]>([]);
-  const [isActive, setIsActive] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
     setStamped(savedStamps ? JSON.parse(savedStamps) : []);
   }, [habit.id]);
-
-  const toggleStamp = (day: number) => {
-    const newStamped = stamped.includes(day)
-      ? stamped.filter((d) => d !== day)
-      : [...stamped, day];
-    setStamped(newStamped);
-    onUpdateStamps(habit.id, newStamped);
-  };
   
   const handleCardClick = () => {
-    setIsActive(true);
-  };
-  
-  const handleMouseLeave = () => {
-    setIsActive(false);
+    const details = encodeURIComponent(JSON.stringify(habit));
+    router.push(`/habit/${habit.id}?details=${details}`);
   };
 
   return (
     <div
-      className={`relative rounded-lg p-6 transition-transform duration-300 ${isActive ? 'transform scale-105 shadow-2xl z-10' : ''} ${habit.cardClass}`}
-      onMouseEnter={handleCardClick}
-      onMouseLeave={handleMouseLeave}
+      className={`relative rounded-lg p-6 transition-transform duration-300 hover:transform hover:scale-105 hover:shadow-2xl hover:z-10 cursor-pointer ${habit.cardClass}`}
+      onClick={handleCardClick}
     >
        <div className="absolute top-2 right-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}} onClick={(e) => e.stopPropagation()}>
               <Ellipsis className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
             <DropdownMenuItem onClick={(e) => {e.stopPropagation(); onEdit(habit)}}>
               <Edit className="mr-2 h-4 w-4" />
               <span>Edit</span>
@@ -145,15 +133,13 @@ function StampCard({
           const day = i + 1;
           const isStamped = stamped.includes(day);
           return (
-             <button
+             <div
               key={i}
-              onClick={(e) => {e.stopPropagation(); toggleStamp(day)}}
               className={cn(
                 "aspect-square rounded-full flex items-center justify-center border-2 border-dashed transition-all",
                 isStamped
                   ? "border-transparent"
-                  : "border-black/20",
-                isActive ? 'scale-110' : ''
+                  : "border-black/20"
               )}
               style={{backgroundColor: isStamped ? habit.textColor: 'transparent', borderColor: `${habit.textColor}40`}}
             >
@@ -166,7 +152,7 @@ function StampCard({
               ) : (
                 <span className="text-sm opacity-50" style={{color: habit.textColor}}>{day}</span>
               )}
-            </button>
+            </div>
           )
         })}
          {habit.numStamps > 12 && (
@@ -334,5 +320,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
-    
