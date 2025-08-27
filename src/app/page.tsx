@@ -31,6 +31,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 
 
@@ -57,12 +58,14 @@ function StampCard({
   onEdit,
   isExpanded,
   onExpand,
+  isActive,
 }: {
   habit: Habit;
   onDelete: (habitId: string) => void;
   onEdit: (habit: Habit) => void;
   isExpanded: boolean;
   onExpand: () => void;
+  isActive: boolean;
 }) {
   const [stamped, setStamped] = useState<number[]>([]);
 
@@ -96,7 +99,8 @@ function StampCard({
       className={cn(
         "relative rounded-lg p-6 transition-all duration-300 ease-in-out cursor-pointer",
         isExpanded ? 'transform scale-105 shadow-2xl z-10' : 'hover:transform hover:scale-105 hover:shadow-2xl hover:z-10',
-        habit.cardClass
+        habit.cardClass,
+        isActive ? 'z-10' : 'z-0'
       )}
       onClick={handleCardClick}
     >
@@ -202,6 +206,8 @@ function HomePageContent() {
   const habitToDeleteParam = params.get("delete");
   const [habits, setHabits] = useState<Habit[]>([]);
   const [expandedHabitId, setExpandedHabitId] = useState<string | null>(null);
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
 
   const updateHabits = useCallback((newHabits: Habit[]) => {
     setHabits(newHabits);
@@ -218,6 +224,24 @@ function HomePageContent() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+ 
+    setCurrent(api.selectedScrollSnap())
+ 
+    const handleSelect = () => {
+      setCurrent(api.selectedScrollSnap())
+    }
+    
+    api.on("select", handleSelect)
+ 
+    return () => {
+      api.off("select", handleSelect)
+    }
+  }, [api])
 
   useEffect(() => {
     if (newHabitParam) {
@@ -305,15 +329,16 @@ function HomePageContent() {
       <main className="p-4">
         {habits.length > 0 ? (
           <Carousel 
+            setApi={setApi}
             opts={{
               align: "center",
               loop: false,
             }}
             className="w-full"
           >
-            <CarouselContent className="-ml-2">
-              {habits.map((habit) => (
-                <CarouselItem key={habit.id} className="pl-4 basis-4/5 md:basis-3/4">
+            <CarouselContent className="-ml-1">
+              {habits.map((habit, index) => (
+                <CarouselItem key={habit.id} className="pl-1 md:basis-full" style={{transform: `translateX(${(index - current) * 10}px) scale(${1 - Math.abs(index-current) * 0.1})`, transition: 'transform 0.3s ease-out', zIndex: habits.length - Math.abs(index-current)}}>
                   <div className="p-1">
                     <StampCard
                       habit={habit}
@@ -321,6 +346,7 @@ function HomePageContent() {
                       onEdit={handleEditHabit}
                       isExpanded={expandedHabitId === habit.id}
                       onExpand={() => handleExpandToggle(habit.id)}
+                      isActive={index === current}
                     />
                   </div>
                 </CarouselItem>
@@ -352,5 +378,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
-    
