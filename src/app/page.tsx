@@ -23,8 +23,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
 
 interface Habit {
   id: string;
@@ -81,7 +88,7 @@ function StampCard({
   return (
     <div
       className={`relative rounded-lg p-6 transition-transform duration-300 ${isActive ? 'transform scale-105 shadow-2xl z-10' : ''} ${habit.cardClass}`}
-      onClick={handleCardClick}
+      onMouseEnter={handleCardClick}
       onMouseLeave={handleMouseLeave}
     >
        <div className="absolute top-2 right-2 z-20">
@@ -133,7 +140,7 @@ function StampCard({
         {habit.subtitle}
       </p>
       <div className="mt-6 grid grid-cols-4 gap-3">
-        {Array.from({ length: habit.numStamps }).map((_, i) => {
+        {Array.from({ length: habit.numStamps > 12 ? 11 : habit.numStamps }).map((_, i) => {
           const day = i + 1;
           const isStamped = stamped.includes(day);
           return (
@@ -161,6 +168,11 @@ function StampCard({
             </button>
           )
         })}
+         {habit.numStamps > 12 && (
+          <div className="aspect-square rounded-full flex items-center justify-center">
+             <Ellipsis style={{color: habit.textColor}} />
+          </div>
+        )}
       </div>
       <p
         className="mt-6 text-sm text-center opacity-60"
@@ -246,6 +258,8 @@ function HomePageContent() {
 
   const handleUpdateStamps = (habitId: string, newStamps: number[]) => {
     localStorage.setItem(`stamps_${habitId}`, JSON.stringify(newStamps));
+    // We might need to trigger a re-render if the child component's state change doesn't bubble up
+    setHabits(prev => [...prev]);
   };
   
   const handleDeleteHabit = (habitId: string) => {
@@ -276,17 +290,30 @@ function HomePageContent() {
           </Link>
         </Button>
       </header>
-      <main className="p-4 space-y-8">
+      <main className="p-4">
         {habits.length > 0 ? (
-          habits.map((habit) => (
-            <StampCard
-              key={habit.id}
-              habit={habit}
-              onUpdateStamps={handleUpdateStamps}
-              onDelete={handleDeleteHabit}
-              onEdit={handleEditHabit}
-            />
-          ))
+          <Carousel className="w-full">
+            <CarouselContent>
+              {habits.map((habit) => (
+                <CarouselItem key={habit.id}>
+                  <div className="p-1">
+                    <StampCard
+                      habit={habit}
+                      onUpdateStamps={handleUpdateStamps}
+                      onDelete={handleDeleteHabit}
+                      onEdit={handleEditHabit}
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {habits.length > 1 && (
+              <>
+                <CarouselPrevious />
+                <CarouselNext />
+              </>
+            )}
+          </Carousel>
         ) : (
           <div className="text-center text-gray-500 mt-20">
             <p>No stamps yet.</p>
@@ -306,3 +333,5 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
