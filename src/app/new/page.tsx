@@ -25,7 +25,7 @@ import { format, differenceInCalendarDays } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import { app, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection } from "firebase/firestore";
 
 const fontOptions = [
   { value: "font-sans", label: "Inter (Sans-serif)" },
