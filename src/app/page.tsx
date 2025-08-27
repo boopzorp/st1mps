@@ -325,16 +325,23 @@ function HomePageContent() {
   return (
     <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center overflow-hidden">
         
-        {expandedHabitId && (
-            <div 
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-                onClick={() => setExpandedHabitId(null)}
-            />
-        )}
-
+        <div 
+            className={cn(
+                "fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300",
+                expandedHabitId ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            )}
+            onClick={() => setExpandedHabitId(null)}
+        />
+        
         {expandedHabit && (
-            <div className="fixed inset-0 flex items-center justify-center z-50 p-4" onClick={() => handleExpandToggle(expandedHabit.id)}>
-                <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300"
+              onClick={() => handleExpandToggle(expandedHabit.id)}
+            >
+                <div 
+                  className="w-full max-w-md transition-all duration-300" 
+                  onClick={(e) => e.stopPropagation()}
+                >
                     <StampCard
                         habit={expandedHabit}
                         onDelete={handleDeleteHabit}
@@ -378,7 +385,7 @@ function HomePageContent() {
                                     className={cn(
                                         "pl-4 transition-opacity duration-300",
                                         "basis-5/6",
-                                        expandedHabitId && expandedHabitId !== habit.id ? 'opacity-0' : 'opacity-100'
+                                        expandedHabitId && expandedHabitId === habit.id ? 'opacity-0' : 'opacity-100'
                                     )}
                                 >
                                     <div className={cn(
