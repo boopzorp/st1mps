@@ -24,6 +24,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Carousel,
@@ -228,24 +229,24 @@ function HomePageContent() {
   const auth = getAuth(app);
 
   useEffect(() => {
-    const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        setUser(null);
-        setHabits([]); // Clear habits on logout
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) {
+        setHabits([]);
         router.push("/signin");
       }
     });
-
-    return () => authUnsubscribe();
+    return () => unsubscribe();
   }, [auth, router]);
   
   useEffect(() => {
-    if (!user) return;
-
-    // Set up Firestore listeners when user is authenticated
-    const habitsQuery = query(collection(db, "users", user.uid, "habits"));
+    if (!user) {
+      return;
+    }
+  
+    const userDocRef = doc(db, "users", user.uid);
+  
+    const habitsQuery = query(collection(userDocRef, "habits"));
     const habitsUnsubscribe = onSnapshot(habitsQuery, (querySnapshot) => {
       const userHabits = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -253,26 +254,25 @@ function HomePageContent() {
       } as Habit));
       setHabits(userHabits);
     }, (error) => {
-        console.error("Error fetching habits:", error);
+      console.error("Error fetching habits:", error);
     });
-    
+  
     const userPrefsDocRef = doc(db, "user_preferences", user.uid);
     const prefsUnsubscribe = onSnapshot(userPrefsDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const prefs = docSnap.data();
-            const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
-            if (selectedColor) {
-                setStickerColor(selectedColor);
-            }
+      if (docSnap.exists()) {
+        const prefs = docSnap.data();
+        const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
+        if (selectedColor) {
+          setStickerColor(selectedColor);
         }
+      }
     }, (error) => {
-        console.error("Error fetching user preferences:", error);
+      console.error("Error fetching user preferences:", error);
     });
-
-    // Return cleanup function to unsubscribe when component unmounts or user changes
+  
     return () => {
-        habitsUnsubscribe();
-        prefsUnsubscribe();
+      habitsUnsubscribe();
+      prefsUnsubscribe();
     };
   }, [user]);
 
@@ -422,7 +422,7 @@ function HomePageContent() {
                   <h1 className="font-playfair text-4xl">Stamps</h1>
                    <Popover>
                         <PopoverTrigger asChild>
-                           <div className={cn("font-caveat absolute top-12 left-0 right-0 mx-auto w-fit px-2 rounded -rotate-6 cursor-pointer", stickerColor.bg, stickerColor.text)}>
+                           <div className={cn("font-caveat w-fit px-2 rounded -rotate-6 cursor-pointer mt-2", stickerColor.bg, stickerColor.text)}>
                             @{user.displayName || user.email?.split('@')[0]}
                           </div>
                         </PopoverTrigger>
@@ -520,7 +520,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
-    
-
-    
