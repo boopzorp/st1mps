@@ -9,10 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StampCard } from '@/components/landing/stamp-card';
 import { Star, Check } from 'lucide-react';
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
+import { GoogleIcon } from '@/components/icons/google';
+
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -21,7 +23,9 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +39,19 @@ export default function SignUpPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await signInWithPopup(auth, googleProvider);
+      router.push('/home');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -105,68 +122,95 @@ export default function SignUpPage() {
                       />
                   </div>
               </div>
-             <div className="relative z-10 space-y-8 rounded-lg bg-zinc-900 p-8 sm:p-10 shadow-2xl backdrop-blur-sm md:bg-zinc-900">
+             <div className="relative z-10 space-y-6 rounded-lg bg-zinc-900 p-8 sm:p-10 shadow-2xl backdrop-blur-sm md:bg-zinc-900">
                   <div className="text-center">
                   <h1 className="font-playfair text-4xl font-bold">Create Your Account</h1>
                   <p className="mt-2 text-gray-400">Start your reward journey today.</p>
                   </div>
+                  {error && (
+                    <Alert variant="destructive">
+                      <Terminal className="h-4 w-4" />
+                      <AlertTitle>Sign-up Error</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
                   <form onSubmit={handleSignUp} className="space-y-6">
-                    {error && (
-                      <Alert variant="destructive">
-                        <Terminal className="h-4 w-4" />
-                        <AlertTitle>Sign-up Error</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-                  <div>
-                      <Label htmlFor="username">Username</Label>
-                      <Input
-                        id="username"
-                        name="username"
-                        type="text"
-                        autoComplete="username"
-                        required
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="mt-1 block w-full appearance-none rounded-md border-zinc-700 bg-zinc-800 px-3 py-2 placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                      />
-                  </div>
-                  <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="mt-1 block w-full appearance-none rounded-md border-zinc-700 bg-zinc-800 px-3 py-2 placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                      />
-                  </div>
-                  <div>
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        name="password"
-                        type="password"
-                        autoComplete="new-password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="mt-1 block w-full appearance-none rounded-md border-zinc-700 bg-zinc-800 px-3 py-2 placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                      />
-                  </div>
-                  <div>
-                      <Button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full rounded-full bg-indigo-500 py-3 text-lg font-semibold text-white hover:bg-indigo-400 disabled:bg-indigo-400"
-                      >
-                        {loading ? 'Creating Account...' : 'Sign Up'}
-                      </Button>
-                  </div>
+                    <div>
+                        <Label htmlFor="username">Username</Label>
+                        <Input
+                          id="username"
+                          name="username"
+                          type="text"
+                          autoComplete="username"
+                          required
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          className="mt-1 block w-full appearance-none rounded-md border-zinc-700 bg-zinc-800 px-3 py-2 placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                        />
+                    </div>
+                    <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          autoComplete="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="mt-1 block w-full appearance-none rounded-md border-zinc-700 bg-zinc-800 px-3 py-2 placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                        />
+                    </div>
+                    <div>
+                        <Label htmlFor="password">Password</Label>
+                        <Input
+                          id="password"
+                          name="password"
+                          type="password"
+                          autoComplete="new-password"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="mt-1 block w-full appearance-none rounded-md border-zinc-700 bg-zinc-800 px-3 py-2 placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                        />
+                    </div>
+                    <div>
+                        <Button
+                          type="submit"
+                          disabled={loading || googleLoading}
+                          className="w-full rounded-full bg-indigo-500 py-3 text-base font-semibold text-white hover:bg-indigo-400 disabled:opacity-50"
+                        >
+                          {loading ? 'Creating Account...' : 'Sign Up with Email'}
+                        </Button>
+                    </div>
                   </form>
+                   <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-zinc-700" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-zinc-900 px-2 text-gray-400">
+                          Or continue with
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <Button
+                        variant="outline"
+                        onClick={handleGoogleSignIn}
+                        disabled={loading || googleLoading}
+                        className="w-full rounded-full py-3 text-base font-semibold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white disabled:opacity-50"
+                      >
+                         {googleLoading ? (
+                          'Signing Up...'
+                        ) : (
+                          <>
+                            <GoogleIcon className="mr-2 h-5 w-5" />
+                            Google
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   <p className="text-center text-sm text-gray-400">
                   Already have an account?{' '}
                   <Link href="/signin" className="font-medium text-indigo-400 hover:text-indigo-300">
@@ -180,5 +224,3 @@ export default function SignUpPage() {
     </div>
   );
 }
-
-    

@@ -9,10 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StampCard } from '@/components/landing/stamp-card';
 import { Heart, Book } from 'lucide-react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
+import { GoogleIcon } from '@/components/icons/google';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -20,7 +21,9 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +36,19 @@ export default function SignInPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await signInWithPopup(auth, googleProvider);
+      router.push('/home');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -104,19 +120,19 @@ export default function SignInPage() {
                </div>
             </div>
 
-            <div className="relative z-10 space-y-8 rounded-lg bg-zinc-900 p-8 sm:p-10 shadow-2xl backdrop-blur-sm md:bg-zinc-900">
+            <div className="relative z-10 space-y-6 rounded-lg bg-zinc-900 p-8 sm:p-10 shadow-2xl backdrop-blur-sm md:bg-zinc-900">
               <div className="text-center">
                 <h1 className="font-playfair text-4xl font-bold">Welcome Back</h1>
                 <p className="mt-2 text-gray-400">Sign in to continue your journey.</p>
               </div>
+               {error && (
+                 <Alert variant="destructive">
+                   <Terminal className="h-4 w-4" />
+                   <AlertTitle>Authentication Error</AlertTitle>
+                   <AlertDescription>{error}</AlertDescription>
+                 </Alert>
+              )}
               <form onSubmit={handleSignIn} className="space-y-6">
-                {error && (
-                   <Alert variant="destructive">
-                     <Terminal className="h-4 w-4" />
-                     <AlertTitle>Authentication Error</AlertTitle>
-                     <AlertDescription>{error}</AlertDescription>
-                   </Alert>
-                )}
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -146,13 +162,40 @@ export default function SignInPage() {
                 <div>
                   <Button
                     type="submit"
-                    disabled={loading}
-                    className="w-full rounded-full bg-indigo-500 py-3 text-lg font-semibold text-white hover:bg-indigo-400 disabled:bg-indigo-400"
+                    disabled={loading || googleLoading}
+                    className="w-full rounded-full bg-indigo-500 py-3 text-base font-semibold text-white hover:bg-indigo-400 disabled:opacity-50"
                   >
                     {loading ? 'Signing In...' : 'Sign In'}
                   </Button>
                 </div>
               </form>
+               <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-zinc-700" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-zinc-900 px-2 text-gray-400">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+              <div>
+                <Button
+                  variant="outline"
+                  onClick={handleGoogleSignIn}
+                  disabled={loading || googleLoading}
+                  className="w-full rounded-full py-3 text-base font-semibold border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:text-white disabled:opacity-50"
+                >
+                  {googleLoading ? (
+                    'Signing In...'
+                  ) : (
+                    <>
+                      <GoogleIcon className="mr-2 h-5 w-5" />
+                      Google
+                    </>
+                  )}
+                </Button>
+              </div>
               <p className="text-center text-sm text-gray-400">
                 Don&apos;t have an account?{' '}
                 <Link href="/signup" className="font-medium text-indigo-400 hover:text-indigo-300">
@@ -166,5 +209,3 @@ export default function SignInPage() {
     </div>
   );
 }
-
-    
