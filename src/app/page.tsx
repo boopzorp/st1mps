@@ -90,11 +90,10 @@ export default function LandingPage() {
           <div className="mx-auto max-w-7xl px-6 lg:px-8 pt-32 sm:pt-48 lg:pt-56">
             <div className="text-center">
               <h2 className="text-4xl font-bold tracking-tight text-white sm:text-6xl font-anton">
-                The Fun Way to Build Great Habits
+                Your Goals, Your Rewards.
               </h2>
               <p className="mt-6 text-lg leading-8 text-gray-300 max-w-2xl mx-auto">
-                Turn your goals into a game. Create beautiful, shareable stamp
-                cards, track your progress, and stay motivated every single day.
+                Set a goal, create a beautiful stamp card for it, and decide on the reward you'll get for completing it. Turn your ambitions into achievements, one stamp at a time.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 <Button
