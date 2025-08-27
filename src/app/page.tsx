@@ -360,7 +360,7 @@ function HomePageContent() {
             <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
                 <div className="relative">
                   <h1 className="font-playfair text-4xl">Stamps</h1>
-                  <div className="font-caveat absolute top-8 left-8 text-pink-900 bg-pink-300 px-2 rounded -rotate-12">
+                  <div className="font-caveat absolute top-10 left-12 text-pink-900 bg-pink-300 px-2 rounded -rotate-12">
                     @username
                   </div>
                 </div>
