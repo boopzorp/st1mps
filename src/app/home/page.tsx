@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from "next/link";
@@ -23,7 +24,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Carousel,
@@ -422,7 +422,7 @@ function HomePageContent() {
                   <h1 className="font-playfair text-4xl">Stamps</h1>
                    <Popover>
                         <PopoverTrigger asChild>
-                           <div className={cn("font-caveat absolute top-10 left-12 px-2 rounded -rotate-12 cursor-pointer", stickerColor.bg, stickerColor.text)}>
+                           <div className={cn("font-caveat absolute top-12 left-0 right-0 mx-auto w-fit px-2 rounded -rotate-6 cursor-pointer", stickerColor.bg, stickerColor.text)}>
                             @{user.displayName || user.email?.split('@')[0]}
                           </div>
                         </PopoverTrigger>
@@ -520,5 +520,7 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
 
     
