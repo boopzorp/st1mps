@@ -256,12 +256,12 @@ export default function NewHabitPage() {
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <Label htmlFor="titleLine1">Line 1</Label>
-                  <Input id="titleLine1" value={formData.titleLine1} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
+                  <Input id="titleLine1" value={formData.titleLine1} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700 rounded-lg" />
                 </div>
                 <div>
                   <Label htmlFor="line1Font">Line 1 Font</Label>
                   <Select onValueChange={(v) => handleSelectChange("line1Font", v)} value={formData.line1Font}>
-                    <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700 rounded-lg"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {fontOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className={cn(opt.value)}>{opt.label}</SelectItem>)}
                     </SelectContent>
@@ -269,12 +269,12 @@ export default function NewHabitPage() {
                 </div>
                 <div>
                   <Label htmlFor="titleLine2">Line 2</Label>
-                  <Input id="titleLine2" value={formData.titleLine2} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
+                  <Input id="titleLine2" value={formData.titleLine2} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700 rounded-lg" />
                 </div>
                 <div>
                   <Label htmlFor="line2Font">Line 2 Font</Label>
                   <Select onValueChange={(v) => handleSelectChange("line2Font", v)} value={formData.line2Font}>
-                    <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700 rounded-lg"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {fontOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className={cn(opt.value)}>{opt.label}</SelectItem>)}
                     </SelectContent>
@@ -287,7 +287,7 @@ export default function NewHabitPage() {
               <h3 className="font-semibold text-lg mb-3">Details</h3>
                <div>
                   <Label htmlFor="condition">Condition</Label>
-                  <Textarea id="condition" value={formData.condition} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" placeholder="e.g., Go for a run every day" />
+                  <Textarea id="condition" value={formData.condition} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700 rounded-lg" placeholder="e.g., Go for a run every day" />
               </div>
             </div>
 
@@ -301,7 +301,7 @@ export default function NewHabitPage() {
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "w-full justify-start text-left font-normal mt-1 bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white",
+                            "w-full justify-start text-left font-normal mt-1 bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white rounded-lg",
                             !formData.endDate && "text-muted-foreground"
                           )}
                         >
@@ -334,7 +334,7 @@ export default function NewHabitPage() {
                               </label>
                           </div>
                       </div>
-                      <Input id="numStamps" type="number" value={formData.numStamps} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700" />
+                      <Input id="numStamps" type="number" value={formData.numStamps} onChange={handleInputChange} className="mt-1 bg-zinc-800 border-zinc-700 rounded-lg" />
                   </div>
                 </div>
             </div>
@@ -366,7 +366,7 @@ export default function NewHabitPage() {
                      <div>
                         <Label htmlFor="themeColor">Theme Color</Label>
                         <Select onValueChange={(v) => handleSelectChange("themeColor", v)} value={formData.themeColor}>
-                            <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700 rounded-lg"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 {colorOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
                             </SelectContent>
@@ -375,7 +375,7 @@ export default function NewHabitPage() {
                     <div>
                         <Label htmlFor="bgColor">Background Color</Label>
                         <Select onValueChange={(v) => handleSelectChange("bgColor", v)} value={formData.bgColor}>
-                            <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="mt-1 bg-zinc-800 border-zinc-700 rounded-lg"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 {backgroundOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
                             </SelectContent>
