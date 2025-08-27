@@ -34,7 +34,9 @@ import {
 } from "@/components/ui/carousel";
 import { getAuth, onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { app, db } from "@/lib/firebase";
-import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, Unsubscribe } from "firebase/firestore";
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, Unsubscribe, getDoc, setDoc } from "firebase/firestore";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 
 interface Habit {
   id: string;
@@ -53,6 +55,16 @@ interface Habit {
   endDate?: string; // ISO string
   stamped: number[];
 }
+
+const stickerColorOptions = [
+    { bg: 'bg-pink-300', text: 'text-pink-900' },
+    { bg: 'bg-blue-300', text: 'text-blue-900' },
+    { bg: 'bg-green-300', text: 'text-green-900' },
+    { bg: 'bg-yellow-300', text: 'text-yellow-900' },
+    { bg: 'bg-purple-300', text: 'text-purple-900' },
+    { bg: 'bg-gray-300', text: 'text-gray-900' },
+];
+
 
 function StampCard({
   habit,
@@ -202,6 +214,7 @@ function HomePageContent() {
 
   const [user, setUser] = useState<User | null>(null);
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [stickerColor, setStickerColor] = useState({ bg: 'bg-pink-300', text: 'text-pink-900' });
   
   const [expandedHabitId, setExpandedHabitId] = useState<string | null>(null);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
@@ -227,15 +240,30 @@ function HomePageContent() {
     const habitsCollectionRef = collection(db, "users", user.uid, "habits");
     const q = query(habitsCollectionRef);
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribeHabits = onSnapshot(q, (querySnapshot) => {
       const userHabits = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       } as Habit));
       setHabits(userHabits);
     });
+    
+    const userPrefsDocRef = doc(db, "user_preferences", user.uid);
+    const unsubscribePrefs = onSnapshot(userPrefsDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const prefs = docSnap.data();
+            const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
+            if (selectedColor) {
+                setStickerColor(selectedColor);
+            }
+        }
+    });
 
-    return () => unsubscribe();
+
+    return () => {
+        unsubscribeHabits();
+        unsubscribePrefs();
+    };
   }, [user]);
 
 
@@ -323,6 +351,18 @@ function HomePageContent() {
     });
   };
 
+  const handleStickerColorChange = async (color: { bg: string, text: string }) => {
+    if (!user) return;
+    setStickerColor(color);
+    const userPrefsDocRef = doc(db, 'user_preferences', user.uid);
+    try {
+        await setDoc(userPrefsDocRef, { stickerBg: color.bg, stickerText: color.text }, { merge: true });
+    } catch (error) {
+        console.error("Error updating sticker color:", error);
+    }
+  };
+
+
   if (!user) {
     return (
         <div className="min-h-screen bg-black flex items-center justify-center">
@@ -372,9 +412,24 @@ function HomePageContent() {
             <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
                 <div className="relative">
                   <h1 className="font-playfair text-4xl">Stamps</h1>
-                   <div className="font-caveat absolute top-10 left-12 text-pink-900 bg-pink-300 px-2 rounded -rotate-12">
-                    @{user.displayName || user.email?.split('@')[0]}
-                  </div>
+                   <Popover>
+                        <PopoverTrigger asChild>
+                           <div className={cn("font-caveat absolute top-10 left-12 px-2 rounded -rotate-12 cursor-pointer", stickerColor.bg, stickerColor.text)}>
+                            @{user.displayName || user.email?.split('@')[0]}
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto bg-zinc-800 border-zinc-700">
+                           <div className="flex gap-2">
+                                {stickerColorOptions.map(color => (
+                                    <button 
+                                        key={color.bg}
+                                        className={cn("w-6 h-6 rounded-full", color.bg, stickerColor.bg === color.bg && "ring-2 ring-white")}
+                                        onClick={() => handleStickerColorChange(color)}
+                                    />
+                                ))}
+                           </div>
+                        </PopoverContent>
+                    </Popover>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button
@@ -457,3 +512,5 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
