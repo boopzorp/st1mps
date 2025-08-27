@@ -98,8 +98,7 @@ function StampCard({
       className={cn(
         "relative rounded-lg p-6 transition-all duration-300 ease-in-out h-full flex flex-col justify-between",
         habit.cardClass,
-        isExpanded ? 'shadow-2xl' : 'hover:shadow-xl',
-        isExpanded ? '' : 'cursor-pointer'
+        isExpanded ? 'shadow-2xl' : 'hover:shadow-xl'
       )}
       onClick={!isExpanded ? handleCardClick : undefined}
     >
@@ -371,7 +370,7 @@ function HomePageContent() {
                 </Button>
             </header>
 
-            <main className="p-4 flex-1 flex items-center">
+            <main className="p-4 mt-16 flex-1 flex items-center">
                 {habits.length > 0 ? (
                     <Carousel 
                         setApi={setApi}
