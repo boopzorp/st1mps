@@ -54,53 +54,41 @@ interface Habit {
 
 function StampCard({
   habit,
+  stamped,
+  toggleStamp,
   onDelete,
   onEdit,
   isExpanded,
   onExpand,
-  isActive,
 }: {
   habit: Habit;
+  stamped: number[];
+  toggleStamp: (day: number) => void;
   onDelete: (habitId: string) => void;
   onEdit: (habit: Habit) => void;
   isExpanded: boolean;
   onExpand: () => void;
-  isActive: boolean;
 }) {
-  const [stamped, setStamped] = useState<number[]>([]);
-
-  useEffect(() => {
-    const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
-    setStamped(savedStamps ? JSON.parse(savedStamps) : []);
-  }, [habit.id]);
-  
-  const toggleStamp = (day: number) => {
-    const newStamped = stamped.includes(day)
-      ? stamped.filter((d) => d !== day)
-      : [...stamped, day];
-    setStamped(newStamped);
-    localStorage.setItem(`stamps_${habit.id}`, JSON.stringify(newStamped));
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent card expansion when clicking on interactive elements
+    if ((e.target as HTMLElement).closest('button, [role="menuitem"], a')) {
+      return;
+    }
+    onExpand();
   };
 
   const isComplete = habit.numStamps > 0 && stamped.length >= habit.numStamps;
   const progressPercent = habit.numStamps > 0 ? Math.round((stamped.length / habit.numStamps) * 100) : 0;
   
-  const handleCardClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button, [role="menuitem"], a')) {
-      return;
-    }
-    onExpand();
-  }
-
   const numVisibleStamps = isExpanded ? habit.numStamps : 10;
   const cardTextColor = isComplete ? '#422006' : habit.textColor;
-
+  
   return (
     <div
       className={cn(
         "relative rounded-lg p-6 transition-all duration-300 ease-in-out h-full flex flex-col justify-between",
         isComplete ? 'bg-gradient-to-br from-yellow-300 to-amber-400 shadow-amber-500/50' : habit.cardClass,
-        isExpanded ? 'shadow-2xl' : 'hover:shadow-xl'
+        !isExpanded && 'hover:shadow-xl'
       )}
       onClick={!isExpanded ? handleCardClick : undefined}
     >
@@ -213,8 +201,12 @@ function HomePageContent() {
   const params = useSearchParams();
   const newHabitParam = params.get("habit");
   const habitToDeleteParam = params.get("delete");
+  
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [stampedState, setStampedState] = useState<Record<string, number[]>>({});
+  
   const [expandedHabitId, setExpandedHabitId] = useState<string | null>(null);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
 
@@ -225,6 +217,7 @@ function HomePageContent() {
     }
   }, []);
 
+  // Load habits and their stamped state from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedHabits = localStorage.getItem('habits');
@@ -233,6 +226,13 @@ function HomePageContent() {
           const parsedHabits = JSON.parse(savedHabits);
           if (Array.isArray(parsedHabits)) {
             setHabits(parsedHabits);
+            // Load stamped state for each habit
+            const newStampedState: Record<string, number[]> = {};
+            parsedHabits.forEach((habit: Habit) => {
+              const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
+              newStampedState[habit.id] = savedStamps ? JSON.parse(savedStamps) : [];
+            });
+            setStampedState(newStampedState);
           }
         } catch (e) {
           console.error("Failed to parse habits from localStorage", e);
@@ -241,35 +241,26 @@ function HomePageContent() {
     }
   }, []);
 
+  // Update carousel state
   useEffect(() => {
-    if (!api) {
-      return
-    }
- 
-    setCurrent(api.selectedScrollSnap())
- 
+    if (!api) return;
+    setCurrent(api.selectedScrollSnap());
     const handleSelect = () => {
-      setCurrent(api.selectedScrollSnap())
-      setExpandedHabitId(null);
-    }
-    
-    api.on("select", handleSelect)
- 
+      setCurrent(api.selectedScrollSnap());
+    };
+    api.on("select", handleSelect);
     return () => {
-      api.off("select", handleSelect)
-    }
-  }, [api])
+      api.off("select", handleSelect);
+    };
+  }, [api]);
 
+  // Handle adding/updating habits from URL
   useEffect(() => {
     if (newHabitParam) {
       try {
         const newHabit = JSON.parse(decodeURIComponent(newHabitParam));
-        
         setHabits(prevHabits => {
-            const existingHabitIndex = prevHabits.findIndex(
-            (h) => h.id.split('-')[0] === newHabit.id.split('-')[0]
-            );
-
+            const existingHabitIndex = prevHabits.findIndex(h => h.id.split('-')[0] === newHabit.id.split('-')[0]);
             let updatedHabits;
             if (existingHabitIndex !== -1) {
                 updatedHabits = [...prevHabits];
@@ -278,44 +269,57 @@ function HomePageContent() {
                    if (typeof window !== 'undefined') {
                       localStorage.removeItem(`stamps_${oldHabit.id}`);
                    }
+                   setStampedState(s => ({...s, [oldHabit.id]: [], [newHabit.id]: []}));
                 }
                 updatedHabits[existingHabitIndex] = newHabit;
-
             } else {
                 updatedHabits = [...prevHabits, newHabit];
+                setStampedState(s => ({...s, [newHabit.id]: []}));
             }
             if (typeof window !== 'undefined') {
                 localStorage.setItem('habits', JSON.stringify(updatedHabits));
             }
             return updatedHabits;
         });
-        
         router.replace('/', {scroll: false});
-
       } catch (error) {
         console.error("Failed to process habit from URL", error);
       }
     }
   }, [newHabitParam, router]);
-
+  
+  // Handle deleting habits from URL (less common, but good to have)
   useEffect(() => {
     if(habitToDeleteParam) {
-      const updatedHabits = habits.filter(h => h.id !== habitToDeleteParam);
-      updateHabits(updatedHabits);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(`stamps_${habitToDeleteParam}`);
-      }
+      handleDeleteHabit(habitToDeleteParam, true);
       router.replace('/', {scroll: false});
     }
-  }, [habitToDeleteParam, habits, updateHabits, router]);
+  }, [habitToDeleteParam, router]);
 
-  const handleDeleteHabit = (habitId: string) => {
+
+  const handleDeleteHabit = (habitId: string, fromUrl = false) => {
     const updatedHabits = habits.filter(h => h.id !== habitId);
     updateHabits(updatedHabits);
+    
+    // Remove stamped state and from local storage
+    setStampedState(s => {
+      const newS = {...s};
+      delete newS[habitId];
+      return newS;
+    });
     if (typeof window !== 'undefined') {
       localStorage.removeItem(`stamps_${habitId}`);
     }
-    setExpandedHabitId(null); // Close if expanded
+
+    // If the deleted habit was expanded, close it.
+    if (expandedHabitId === habitId) {
+      handleExpandToggle(habitId);
+    }
+    
+    // if called from button click, it reloads the page to remove param
+    if(!fromUrl) {
+        router.push(`/?delete=${habitId}`, {scroll: false});
+    }
   };
 
   const handleEditHabit = (habit: Habit) => {
@@ -324,8 +328,35 @@ function HomePageContent() {
   };
 
   const handleExpandToggle = (habitId: string) => {
-    setExpandedHabitId(prevId => prevId === habitId ? null : habitId);
-  }
+    if (expandedHabitId === habitId) {
+      setIsAnimatingOut(true);
+      setTimeout(() => {
+        setExpandedHabitId(null);
+        setIsAnimatingOut(false);
+      }, 300); // Duration of the fade-out animation
+    } else {
+      setExpandedHabitId(habitId);
+    }
+  };
+  
+  const toggleStampForHabit = (habitId: string, day: number) => {
+    setStampedState(prevState => {
+      const currentStamps = prevState[habitId] || [];
+      const newStamps = currentStamps.includes(day)
+        ? currentStamps.filter(d => d !== day)
+        : [...currentStamps, day];
+      
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`stamps_${habitId}`, JSON.stringify(newStamps));
+      }
+      
+      return {
+        ...prevState,
+        [habitId]: newStamps,
+      };
+    });
+  };
 
   const expandedHabit = habits.find(h => h.id === expandedHabitId);
 
@@ -335,18 +366,18 @@ function HomePageContent() {
         <div 
             className={cn(
                 "fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300",
-                expandedHabitId ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                (expandedHabitId && !isAnimatingOut) ? 'opacity-100' : 'opacity-0 pointer-events-none'
             )}
-            onClick={() => setExpandedHabitId(null)}
+            onClick={() => expandedHabitId && handleExpandToggle(expandedHabitId)}
         />
         
         {expandedHabit && (
-            <div 
+            <div
               className={cn(
                 "fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300",
-                 expandedHabitId ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+                (expandedHabitId && !isAnimatingOut) ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
               )}
-              onClick={() => setExpandedHabitId(null)}
+              onClick={() => handleExpandToggle(expandedHabit.id)}
             >
                 <div 
                   className="w-full max-w-md" 
@@ -354,11 +385,12 @@ function HomePageContent() {
                 >
                     <StampCard
                         habit={expandedHabit}
+                        stamped={stampedState[expandedHabit.id] || []}
+                        toggleStamp={(day) => toggleStampForHabit(expandedHabit.id, day)}
                         onDelete={handleDeleteHabit}
                         onEdit={handleEditHabit}
                         isExpanded={true}
                         onExpand={() => handleExpandToggle(expandedHabit.id)}
-                        isActive={true}
                     />
                 </div>
             </div>
@@ -368,7 +400,7 @@ function HomePageContent() {
             <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
                 <div className="relative">
                   <h1 className="font-playfair text-4xl">Stamps</h1>
-                  <div className="font-caveat absolute top-10 left-12 text-pink-900 bg-pink-300 px-2 rounded -rotate-12">
+                   <div className="font-caveat absolute top-10 left-12 text-pink-900 bg-pink-300 px-2 rounded -rotate-12">
                     @username
                   </div>
                 </div>
@@ -387,10 +419,7 @@ function HomePageContent() {
                 {habits.length > 0 ? (
                     <Carousel 
                         setApi={setApi}
-                        opts={{
-                            align: "center",
-                            loop: false,
-                        }}
+                        opts={{ align: "center", loop: false }}
                         className="w-full"
                     >
                         <CarouselContent className="-ml-4">
@@ -400,7 +429,7 @@ function HomePageContent() {
                                     className={cn(
                                         "pl-4 transition-opacity duration-300",
                                         "basis-5/6",
-                                        expandedHabitId && expandedHabitId === habit.id ? 'opacity-0' : 'opacity-100'
+                                        expandedHabitId === habit.id ? 'opacity-0' : 'opacity-100'
                                     )}
                                 >
                                     <div className={cn(
@@ -409,11 +438,12 @@ function HomePageContent() {
                                     )}>
                                         <StampCard
                                             habit={habit}
+                                            stamped={stampedState[habit.id] || []}
+                                            toggleStamp={(day) => toggleStampForHabit(habit.id, day)}
                                             onDelete={handleDeleteHabit}
                                             onEdit={handleEditHabit}
                                             isExpanded={false}
                                             onExpand={() => handleExpandToggle(habit.id)}
-                                            isActive={index === current}
                                         />
                                     </div>
                                 </CarouselItem>
@@ -446,5 +476,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
-    
