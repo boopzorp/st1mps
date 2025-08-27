@@ -23,7 +23,7 @@ export default function SignUpPage() {
         />
       </div>
 
-       <div className="container relative z-10 flex min-h-screen items-center justify-center">
+       <div className="container relative z-10 flex min-h-screen items-center justify-center py-12 md:py-0">
         <div className="grid w-full max-w-6xl grid-cols-1 gap-16 md:grid-cols-2">
           <div className="flex flex-col items-center justify-center">
             <div className="w-full max-w-md space-y-8 rounded-lg bg-zinc-900/50 p-10 shadow-2xl backdrop-blur-sm">
@@ -82,7 +82,7 @@ export default function SignUpPage() {
                 </p>
             </div>
           </div>
-          <div className="relative hidden items-center justify-center md:flex">
+          <div className="relative flex items-center justify-center">
              <div className="flex flex-col gap-6">
                 <StampCard
                     title="PRACTICE GUITAR"
