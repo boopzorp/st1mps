@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,32 +43,37 @@ const fontOptions = [
 ];
 
 const colorOptions = [
-  { value: "#3B6EC5", label: "Blue" },
-  { value: "#000000", label: "Black" },
-  { value: "#E53E3E", label: "Red" },
-  { value: "#38A169", label: "Green" },
-  { value: "#DD6B20", label: "Orange" },
-  { value: "#805AD5", label: "Purple" },
-  { value: "#D53F8C", label: "Hot Pink" },
-  { value: "#00A3C4", label: "Teal" },
-  { value: "#F59E0B", label: "Amber" },
-  { value: "#10B981", label: "Emerald" },
-  { value: "#6366F1", label: "Indigo" },
+    { value: "#3B6EC5", label: "Blue" },
+    { value: "#000000", label: "Black" },
+    { value: "#E53E3E", label: "Red" },
+    { value: "#38A169", label: "Green" },
+    { value: "#DD6B20", label: "Orange" },
+    { value: "#805AD5", label: "Purple" },
+    { value: "#D53F8C", label: "Hot Pink" },
+    { value: "#00A3C4", label: "Teal" },
+    { value: "#F59E0B", label: "Amber" },
+    { value: "#10B981", label: "Emerald" },
+    { value: "#6366F1", label: "Indigo" },
+    { value: "#D946EF", label: "Fuchsia" },
+    { value: "#22C55E", label: "Lime" },
+    { value: "#EC4899", label: "Pink" },
 ];
 
 const backgroundOptions = [
-  { value: "bg-[#F3F0E6]", label: "Off-White" },
-  { value: "bg-[#F8D8D8]", label: "Pink" },
-  { value: "bg-zinc-800", label: "Dark Grey" },
-  { value: "bg-white", label: "White" },
-  { value: "bg-[#E6F4EA]", label: "Mint Green" },
-  { value: "bg-[#FEFCBF]", label: "Lemon Chiffon" },
-  { value: "bg-[#D6EAF8]", label: "Light Blue" },
-  { value: "bg-[#E8D4F5]", label: "Lavender" },
-  { value: "bg-amber-100", label: "Light Yellow" },
-  { value: "bg-teal-100", label: "Light Teal" },
-  { value: "bg-fuchsia-200", label: "Light Fuchsia" },
-  { value: "bg-lime-200", label: "Lime" },
+    { value: "bg-[#F3F0E6]", label: "Off-White" },
+    { value: "bg-[#F8D8D8]", label: "Pastel Pink" },
+    { value: "bg-zinc-800", label: "Dark Grey" },
+    { value: "bg-white", label: "White" },
+    { value: "bg-[#E6F4EA]", label: "Mint Green" },
+    { value: "bg-[#FEFCBF]", label: "Lemon Chiffon" },
+    { value: "bg-[#D6EAF8]", label: "Light Blue" },
+    { value: "bg-[#E8D4F5]", label: "Lavender" },
+    { value: "bg-amber-100", label: "Light Yellow" },
+    { value: "bg-teal-100", label: "Light Teal" },
+    { value: "bg-fuchsia-200", label: "Light Fuchsia" },
+    { value: "bg-lime-200", label: "Light Lime" },
+    { value: "bg-rose-200", label: "Light Rose" },
+    { value: "bg-indigo-200", label: "Light Indigo" },
 ];
 
 const initialFormData = {
@@ -85,11 +91,10 @@ const initialFormData = {
 };
 
 
-export default function NewHabitPage() {
+function NewHabitPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const habitIdParam = searchParams.get('habit_id');
-  const [isClient, setIsClient] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   
   const [formData, setFormData] = useState(initialFormData);
@@ -99,7 +104,6 @@ export default function NewHabitPage() {
   const auth = getAuth(app);
 
   useEffect(() => {
-    setIsClient(true);
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -215,7 +219,7 @@ export default function NewHabitPage() {
     }
   };
 
-  if (!isClient || !user) {
+  if (!user) {
     return <div className="min-h-screen bg-black flex items-center justify-center"><p className="text-white">Loading...</p></div>;
   }
 
@@ -440,3 +444,13 @@ export default function NewHabitPage() {
     </div>
   );
 }
+
+export default function NewHabitPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><p className="text-white">Loading...</p></div>}>
+      <NewHabitPageContent />
+    </Suspense>
+  );
+}
+
+    
