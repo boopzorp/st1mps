@@ -8,7 +8,7 @@ import { Heart, Book } from 'lucide-react';
 
 export default function SignInPage() {
   return (
-    <div className="relative min-h-screen w-full bg-zinc-900 text-white">
+    <div className="relative min-h-screen w-full bg-zinc-900 text-white overflow-hidden">
       <div
         className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
         aria-hidden="true"
@@ -22,10 +22,10 @@ export default function SignInPage() {
         />
       </div>
 
-      <div className="container relative z-10 flex min-h-screen items-center justify-center py-12 md:py-0">
-        <div className="grid w-full max-w-6xl grid-cols-1 gap-16 md:grid-cols-2">
-          <div className="flex flex-col items-center justify-center">
-            <div className="w-full max-w-md space-y-8 rounded-lg bg-zinc-900/50 p-10 shadow-2xl backdrop-blur-sm">
+      <div className="container relative z-10 flex min-h-screen items-center justify-center py-12">
+        <div className="w-full max-w-md">
+          <div className="relative">
+            <div className="relative z-10 space-y-8 rounded-lg bg-zinc-900/50 p-8 sm:p-10 shadow-2xl backdrop-blur-sm">
               <div className="text-center">
                 <h1 className="font-playfair text-4xl font-bold">Welcome Back</h1>
                 <p className="mt-2 text-gray-400">Sign in to continue your journey.</p>
@@ -69,31 +69,31 @@ export default function SignInPage() {
                 </Link>
               </p>
             </div>
-          </div>
-          
-          <div className="relative flex items-center justify-center">
-             <div className="flex flex-col gap-6">
-                <StampCard
-                    title="MORNING RUNS"
-                    subtitle="30 days of cardio"
-                    icon={Heart}
-                    stamps={10}
-                    font="font-vt323"
-                    bgColor="bg-teal-300"
-                    textColor="text-teal-950"
-                    className="rotate-[8deg]"
-                />
-                <StampCard
-                    title="READ EVERY DAY"
-                    subtitle="Finish 10 books"
-                    icon={Book}
-                    stamps={7}
-                    font="font-anton"
-                    bgColor="bg-rose-300"
-                    textColor="text-rose-950"
-                    className="rotate-[-6deg]"
-                />
-             </div>
+            
+            <div className="absolute inset-0 flex items-center justify-center">
+               <div className="relative w-full h-full">
+                  <StampCard
+                      title="MORNING RUNS"
+                      subtitle="30 days of cardio"
+                      icon={Heart}
+                      stamps={10}
+                      font="font-vt323"
+                      bgColor="bg-teal-300"
+                      textColor="text-teal-950"
+                      className="absolute top-[-20%] left-[-30%] w-64 h-80 rotate-[-15deg] scale-90"
+                  />
+                  <StampCard
+                      title="READ EVERY DAY"
+                      subtitle="Finish 10 books"
+                      icon={Book}
+                      stamps={7}
+                      font="font-anton"
+                      bgColor="bg-rose-300"
+                      textColor="text-rose-950"
+                      className="absolute bottom-[-25%] right-[-20%] w-64 h-80 rotate-[10deg]"
+                  />
+               </div>
+            </div>
           </div>
         </div>
       </div>
