@@ -311,66 +311,77 @@ function HomePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative">
+    <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center">
       {expandedHabitId && (
-          <div 
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10"
-            onClick={() => setExpandedHabitId(null)}
-          />
-        )}
-        <div className="max-w-md mx-auto relative">
-      <header className="flex items-center justify-between p-4">
-        <h1 className="font-playfair text-4xl">Stamps</h1>
-        <Button
-          size="icon"
-          className="rounded-full bg-white text-black"
-          asChild
-        >
-          <Link href="/new">
-            <Plus />
-          </Link>
-        </Button>
-      </header>
-      <main className="p-4">
-        {habits.length > 0 ? (
-          <Carousel 
-            setApi={setApi}
-            opts={{
-              align: "center",
-              loop: false,
-            }}
-            className="w-full"
+        <div 
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10"
+          onClick={() => setExpandedHabitId(null)}
+        />
+      )}
+      <div className="w-full max-w-md relative">
+        <header className="flex items-center justify-between p-4">
+          <h1 className="font-playfair text-4xl">Stamps</h1>
+          <Button
+            size="icon"
+            className="rounded-full bg-white text-black"
+            asChild
           >
-            <CarouselContent className="-ml-1">
-              {habits.map((habit, index) => (
-                <CarouselItem key={habit.id} className={cn("pl-1 md:basis-full transition-transform duration-300 ease-out", expandedHabitId === habit.id && 'z-20')} style={{transform: `translateX(${(index - current) * 10}px) scale(${1 - Math.abs(index-current) * 0.1})`, zIndex: habits.length - Math.abs(index-current)}}>
-                  <div className="p-1">
-                    <StampCard
-                      habit={habit}
-                      onDelete={handleDeleteHabit}
-                      onEdit={handleEditHabit}
-                      isExpanded={expandedHabitId === habit.id}
-                      onExpand={() => handleExpandToggle(habit.id)}
-                      isActive={index === current}
-                    />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {habits.length > 1 && !expandedHabitId && (
-              <>
-                <CarouselPrevious className="left-[-10px] sm:left-[-20px]"/>
-                <CarouselNext className="right-[-10px] sm:right-[-20px]"/>
-              </>
-            )}
-          </Carousel>
-        ) : (
-          <div className="text-center text-gray-500 mt-20">
-            <p>No stamps yet.</p>
-            <p>Click the '+' button to create one.</p>
-          </div>
-        )}
-      </main>
+            <Link href="/new">
+              <Plus />
+            </Link>
+          </Button>
+        </header>
+        <main className="p-4">
+          {habits.length > 0 ? (
+            <Carousel 
+              setApi={setApi}
+              opts={{
+                align: "center",
+                loop: false,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-1">
+                {habits.map((habit, index) => (
+                  <CarouselItem 
+                    key={habit.id} 
+                    className={cn(
+                      "pl-1 md:basis-full transition-transform duration-300 ease-out", 
+                      expandedHabitId === habit.id ? 'z-20' : `z-${10 - Math.abs(index-current)}`
+                    )} 
+                    style={{
+                      transform: expandedHabitId === habit.id 
+                        ? 'translateY(-50%) scale(1)' 
+                        : `translateX(${(index - current) * 10}px) scale(${1 - Math.abs(index-current) * 0.1})`,
+                    }}
+                  >
+                    <div className={cn("p-1", expandedHabitId === habit.id && "fixed top-1/2 left-1/2 w-full max-w-md -translate-x-1/2")}>
+                      <StampCard
+                        habit={habit}
+                        onDelete={handleDeleteHabit}
+                        onEdit={handleEditHabit}
+                        isExpanded={expandedHabitId === habit.id}
+                        onExpand={() => handleExpandToggle(habit.id)}
+                        isActive={index === current}
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {habits.length > 1 && !expandedHabitId && (
+                <>
+                  <CarouselPrevious className="left-[-10px] sm:left-[-20px]"/>
+                  <CarouselNext className="right-[-10px] sm:right-[-20px]"/>
+                </>
+              )}
+            </Carousel>
+          ) : (
+            <div className="text-center text-gray-500 mt-20">
+              <p>No stamps yet.</p>
+              <p>Click the '+' button to create one.</p>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
