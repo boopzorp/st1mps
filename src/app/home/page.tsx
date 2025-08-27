@@ -228,31 +228,36 @@ function HomePageContent() {
   const auth = getAuth(app);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
       } else {
+        setUser(null);
+        setHabits([]); // Clear habits on logout
         router.push("/signin");
       }
     });
-    return () => unsubscribe();
+
+    return () => authUnsubscribe();
   }, [auth, router]);
   
   useEffect(() => {
     if (!user) return;
 
+    // Set up Firestore listeners when user is authenticated
     const habitsQuery = query(collection(db, "users", user.uid, "habits"));
-
-    const unsubscribeHabits = onSnapshot(habitsQuery, (querySnapshot) => {
+    const habitsUnsubscribe = onSnapshot(habitsQuery, (querySnapshot) => {
       const userHabits = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       } as Habit));
       setHabits(userHabits);
+    }, (error) => {
+        console.error("Error fetching habits:", error);
     });
     
     const userPrefsDocRef = doc(db, "user_preferences", user.uid);
-    const unsubscribePrefs = onSnapshot(userPrefsDocRef, (docSnap) => {
+    const prefsUnsubscribe = onSnapshot(userPrefsDocRef, (docSnap) => {
         if (docSnap.exists()) {
             const prefs = docSnap.data();
             const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
@@ -260,12 +265,14 @@ function HomePageContent() {
                 setStickerColor(selectedColor);
             }
         }
+    }, (error) => {
+        console.error("Error fetching user preferences:", error);
     });
 
-
+    // Return cleanup function to unsubscribe when component unmounts or user changes
     return () => {
-        unsubscribeHabits();
-        unsubscribePrefs();
+        habitsUnsubscribe();
+        prefsUnsubscribe();
     };
   }, [user]);
 
@@ -347,9 +354,7 @@ function HomePageContent() {
   };
 
   const handleSignOut = () => {
-    signOut(auth).then(() => {
-      router.push('/signin');
-    }).catch((error) => {
+    signOut(auth).catch((error) => {
       console.error('Sign out error', error);
     });
   };
@@ -515,3 +520,5 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
