@@ -346,7 +346,7 @@ function HomePageContent() {
                 "fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300",
                  expandedHabitId ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
               )}
-              onClick={() => e.stopPropagation()}
+              onClick={() => setExpandedHabitId(null)}
             >
                 <div 
                   className="w-full max-w-md" 
