@@ -150,7 +150,10 @@ function StampCard({
         </div>
 
         <h2
-          className={`text-4xl md:text-5xl font-bold ${habit.titleClass}`}
+          className={cn(
+            `text-3xl sm:text-4xl md:text-5xl font-bold break-words`,
+            habit.titleClass
+          )}
           style={{ color: cardTextColor }}
         >
           <span className={cn(habit.line1Font)}>{habit.titleLine1}</span>

@@ -57,7 +57,7 @@ export default function LandingPage() {
           <div className="relative mt-16 sm:mt-24 pb-20">
             <div className="lg:mx-auto lg:max-w-7xl lg:px-8">
               <div className="relative h-[80rem] sm:h-[55rem] overflow-hidden">
-                <div className="absolute top-0 grid h-full w-full grid-cols-2 gap-6 p-6">
+                <div className="absolute top-0 grid h-full w-full grid-cols-1 sm:grid-cols-2 gap-6 p-6">
                   <div className="flex flex-col gap-6">
                     <StampCard
                         title="READ EVERY DAY"
@@ -90,7 +90,7 @@ export default function LandingPage() {
                         className="rotate-[-1deg]"
                     />
                   </div>
-                   <div className="flex flex-col gap-6 mt-16">
+                   <div className="flex flex-col gap-6 sm:mt-16">
                      <StampCard
                         title="DRINK WATER"
                         subtitle="8 glasses a day"

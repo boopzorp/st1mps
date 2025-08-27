@@ -227,7 +227,7 @@ export default function NewHabitPage() {
               className={`rounded-lg p-6 ${formData.bgColor} shadow-lg`}
             >
               <h2
-                className={`text-4xl font-bold break-words`}
+                className={`text-3xl sm:text-4xl md:text-5xl font-bold break-words`}
                 style={{ color: formData.themeColor }}
               >
                 <span className={cn(formData.line1Font)}>
