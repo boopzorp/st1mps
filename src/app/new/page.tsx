@@ -23,6 +23,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, differenceInCalendarDays } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
+import { app, db } from "@/lib/firebase";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
 const fontOptions = [
   { value: "font-sans", label: "Inter (Sans-serif)" },
@@ -68,46 +71,55 @@ const initialFormData = {
 export default function NewHabitPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const habitIdParam = searchParams.get('habit_id');
   const [isClient, setIsClient] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   
-  const [formData, setFormData] = useState(() => {
-    const habitParam = searchParams.get('habit');
-    if (habitParam) {
-      try {
-        const decodedHabit = JSON.parse(decodeURIComponent(habitParam));
-        if(decodedHabit.id) {
-           return {
-            titleLine1: decodedHabit.titleLine1,
-            line1Font: decodedHabit.line1Font,
-            titleLine2: decodedHabit.titleLine2,
-            line2Font: decodedHabit.line2Font,
-            numStamps: decodedHabit.numStamps,
-            endDate: decodedHabit.endDate ? new Date(decodedHabit.endDate) : undefined,
-            condition: decodedHabit.description,
-            themeColor: decodedHabit.textColor,
-            bgColor: decodedHabit.cardClass,
-            stampLogo: decodedHabit.stampLogo,
-            createdAt: decodedHabit.createdAt ? new Date(decodedHabit.createdAt) : new Date()
-          };
-        }
-      } catch (e) {
-        console.error("Failed to parse habit from URL", e);
-      }
-    }
-    return initialFormData;
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const [matchDays, setMatchDays] = useState(false);
   
+  const auth = getAuth(app);
+
   useEffect(() => {
     setIsClient(true);
-    const habitParam = searchParams.get('habit');
-    if (habitParam) {
-       // Already handled in useState initializer
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        router.push("/signin");
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, router]);
+
+  useEffect(() => {
+    if (habitIdParam && user) {
+      const fetchHabit = async () => {
+        const habitDocRef = doc(db, "users", user.uid, "habits", habitIdParam);
+        const docSnap = await getDoc(habitDocRef);
+        if (docSnap.exists()) {
+          const habitData = docSnap.data();
+          setFormData({
+            titleLine1: habitData.titleLine1,
+            line1Font: habitData.line1Font,
+            titleLine2: habitData.titleLine2,
+            line2Font: habitData.line2Font,
+            numStamps: habitData.numStamps,
+            endDate: habitData.endDate ? new Date(habitData.endDate) : undefined,
+            condition: habitData.description,
+            themeColor: habitData.textColor,
+            bgColor: habitData.cardClass,
+            stampLogo: habitData.stampLogo,
+            createdAt: new Date(habitData.createdAt),
+          });
+        }
+      };
+      fetchHabit();
     } else {
-      setFormData(prev => ({ ...prev, createdAt: new Date() }));
+      setFormData(prev => ({...initialFormData, createdAt: new Date()}));
     }
-  }, [searchParams]);
+  }, [habitIdParam, user]);
 
   const timePeriodDays = formData.endDate ? differenceInCalendarDays(formData.endDate, formData.createdAt) + 1 : 0;
 
@@ -141,9 +153,9 @@ export default function NewHabitPage() {
     setFormData((prev) => ({ ...prev, stampLogo: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const habitId = (formData.titleLine2 || "habit").toLowerCase().replace(/ /g, "-") + '-' + Date.now();
+    if (!user) return;
     
     let subtitle = "0 days";
     if (formData.endDate) {
@@ -151,8 +163,7 @@ export default function NewHabitPage() {
         subtitle = `${days} day${days !== 1 ? 's' : ''}`;
     }
     
-    const newHabit = {
-      id: habitId,
+    const habitData = {
       titleLine1: formData.titleLine1,
       titleLine2: formData.titleLine2,
       line1Font: formData.line1Font,
@@ -168,12 +179,27 @@ export default function NewHabitPage() {
       endDate: formData.endDate?.toISOString(),
     };
 
-    const details = encodeURIComponent(JSON.stringify(newHabit))
-    router.push(`/home?habit=${details}`);
+    let finalHabitId = habitIdParam;
+
+    try {
+      if (habitIdParam) {
+        // Editing existing habit
+        const habitDocRef = doc(db, "users", user.uid, "habits", habitIdParam);
+        await updateDoc(habitDocRef, habitData);
+      } else {
+        // Creating new habit
+        const newHabitDocRef = doc(collection(db, "users", user.uid, "habits"));
+        await setDoc(newHabitDocRef, { ...habitData, stamped: [] });
+        finalHabitId = newHabitDocRef.id;
+      }
+      router.push(`/home?habit_id=${finalHabitId}`);
+    } catch (error) {
+      console.error("Error saving habit:", error);
+    }
   };
 
-  if (!isClient) {
-    return null; // or a loading spinner
+  if (!isClient || !user) {
+    return <div className="min-h-screen bg-black flex items-center justify-center"><p className="text-white">Loading...</p></div>;
   }
 
   return (
@@ -192,7 +218,7 @@ export default function NewHabitPage() {
         </Link>
       </header>
       <main className="flex-1 flex flex-col p-4">
-        <h1 className="font-playfair text-4xl mb-4">New Stamp</h1>
+        <h1 className="font-playfair text-4xl mb-4">{habitIdParam ? 'Edit Stamp' : 'New Stamp'}</h1>
         
         {/* Preview */}
         <div className="mb-8">
@@ -389,7 +415,7 @@ export default function NewHabitPage() {
             type="submit"
             className="w-full h-12 rounded-full bg-white text-black text-lg font-semibold hover:bg-gray-200 mt-8"
           >
-            Create Stamp
+            {habitIdParam ? 'Update Stamp' : 'Create Stamp'}
           </Button>
         </form>
       </main>

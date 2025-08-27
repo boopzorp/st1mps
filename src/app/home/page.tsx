@@ -33,8 +33,8 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { getAuth, onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { app } from "@/lib/firebase";
-
+import { app, db } from "@/lib/firebase";
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, Unsubscribe } from "firebase/firestore";
 
 interface Habit {
   id: string;
@@ -51,11 +51,11 @@ interface Habit {
   stampLogo: StampIconName;
   createdAt: string; // ISO string
   endDate?: string; // ISO string
+  stamped: number[];
 }
 
 function StampCard({
   habit,
-  stamped,
   toggleStamp,
   onDelete,
   onEdit,
@@ -63,7 +63,6 @@ function StampCard({
   onExpand,
 }: {
   habit: Habit;
-  stamped: number[];
   toggleStamp: (day: number) => void;
   onDelete: (habitId: string) => void;
   onEdit: (habit: Habit) => void;
@@ -78,8 +77,8 @@ function StampCard({
     onExpand();
   };
 
-  const isComplete = habit.numStamps > 0 && stamped.length >= habit.numStamps;
-  const progressPercent = habit.numStamps > 0 ? Math.round((stamped.length / habit.numStamps) * 100) : 0;
+  const isComplete = habit.numStamps > 0 && habit.stamped.length >= habit.numStamps;
+  const progressPercent = habit.numStamps > 0 ? Math.round((habit.stamped.length / habit.numStamps) * 100) : 0;
   
   const numVisibleStamps = isExpanded ? habit.numStamps : 10;
   const cardTextColor = isComplete ? '#422006' : habit.textColor;
@@ -154,7 +153,7 @@ function StampCard({
           )}>
           {Array.from({ length: Math.min(habit.numStamps, numVisibleStamps) }).map((_, i) => {
             const day = i + 1;
-            const isStamped = stamped.includes(day);
+            const isStamped = habit.stamped.includes(day);
             return (
               <button
                 key={i}
@@ -199,12 +198,10 @@ function StampCard({
 function HomePageContent() {
   const router = useRouter();
   const params = useSearchParams();
-  const newHabitParam = params.get("habit");
-  const habitToDeleteParam = params.get("delete");
-  
+  const scrollToHabitId = params.get("habit_id");
+
   const [user, setUser] = useState<User | null>(null);
   const [habits, setHabits] = useState<Habit[]>([]);
-  const [stampedState, setStampedState] = useState<Record<string, number[]>>({});
   
   const [expandedHabitId, setExpandedHabitId] = useState<string | null>(null);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
@@ -223,58 +220,38 @@ function HomePageContent() {
     });
     return () => unsubscribe();
   }, [auth, router]);
-
-  const updateHabits = useCallback((newHabits: Habit[]) => {
-    setHabits(newHabits);
-    if (typeof window !== 'undefined' && user) {
-      localStorage.setItem(`habits_${user.uid}`, JSON.stringify(newHabits));
-    }
-  }, [user]);
-
-  const handleDeleteHabit = useCallback((habitId: string, fromUrl = false) => {
-    const updatedHabits = habits.filter(h => h.id !== habitId);
-    updateHabits(updatedHabits);
-    
-    setStampedState(s => {
-      const newS = {...s};
-      delete newS[habitId];
-      return newS;
-    });
-    if (typeof window !== 'undefined' && user) {
-      localStorage.removeItem(`stamps_${user.uid}_${habitId}`);
-    }
-
-    if (expandedHabitId === habitId) {
-      handleExpandToggle(habitId);
-    }
-    
-    if(!fromUrl) {
-        router.push(`/home?delete=${habitId}`, {scroll: false});
-    }
-  }, [habits, updateHabits, expandedHabitId, router, user]);
   
   useEffect(() => {
-    if (typeof window !== 'undefined' && user) {
-      const savedHabits = localStorage.getItem(`habits_${user.uid}`);
-      if (savedHabits) {
-        try {
-          const parsedHabits = JSON.parse(savedHabits);
-          if (Array.isArray(parsedHabits)) {
-            setHabits(parsedHabits);
-            const newStampedState: Record<string, number[]> = {};
-            parsedHabits.forEach((habit: Habit) => {
-              const savedStamps = localStorage.getItem(`stamps_${user.uid}_${habit.id}`);
-              newStampedState[habit.id] = savedStamps ? JSON.parse(savedStamps) : [];
-            });
-            setStampedState(newStampedState);
-          }
-        } catch (e) {
-          console.error("Failed to parse habits from localStorage", e);
-        }
-      }
-    }
+    if (!user) return;
+
+    const habitsCollectionRef = collection(db, "users", user.uid, "habits");
+    const q = query(habitsCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const userHabits = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Habit));
+      setHabits(userHabits);
+    });
+
+    return () => unsubscribe();
   }, [user]);
 
+
+  const handleDeleteHabit = useCallback(async (habitId: string) => {
+    if (!user) return;
+    try {
+      const habitDocRef = doc(db, "users", user.uid, "habits", habitId);
+      await deleteDoc(habitDocRef);
+      if (expandedHabitId === habitId) {
+        handleExpandToggle(habitId);
+      }
+    } catch (error) {
+      console.error("Error deleting habit:", error);
+    }
+  }, [user, expandedHabitId]);
+  
   useEffect(() => {
     if (!api) return;
     setCurrent(api.selectedScrollSnap());
@@ -288,49 +265,18 @@ function HomePageContent() {
   }, [api]);
 
   useEffect(() => {
-    if (newHabitParam && user) {
-      try {
-        const newHabit = JSON.parse(decodeURIComponent(newHabitParam));
-        setHabits(prevHabits => {
-            const existingHabitIndex = prevHabits.findIndex(h => h.id.split('-')[0] === newHabit.id.split('-')[0]);
-            let updatedHabits;
-            if (existingHabitIndex !== -1) {
-                updatedHabits = [...prevHabits];
-                const oldHabit = updatedHabits[existingHabitIndex];
-                if (oldHabit.id !== newHabit.id) {
-                   if (typeof window !== 'undefined') {
-                      localStorage.removeItem(`stamps_${user.uid}_${oldHabit.id}`);
-                   }
-                   setStampedState(s => ({...s, [oldHabit.id]: [], [newHabit.id]: []}));
-                }
-                updatedHabits[existingHabitIndex] = newHabit;
-            } else {
-                updatedHabits = [...prevHabits, newHabit];
-                setStampedState(s => ({...s, [newHabit.id]: []}));
-            }
-            if (typeof window !== 'undefined') {
-                localStorage.setItem(`habits_${user.uid}`, JSON.stringify(updatedHabits));
-            }
-            return updatedHabits;
-        });
+    if (scrollToHabitId && habits.length > 0 && api) {
+      const habitIndex = habits.findIndex(h => h.id === scrollToHabitId);
+      if (habitIndex !== -1 && habitIndex !== current) {
+        api.scrollTo(habitIndex);
         router.replace('/home', {scroll: false});
-      } catch (error) {
-        console.error("Failed to process habit from URL", error);
       }
     }
-  }, [newHabitParam, router, user]);
-  
-  useEffect(() => {
-    if(habitToDeleteParam) {
-      handleDeleteHabit(habitToDeleteParam, true);
-      router.replace('/home', {scroll: false});
-    }
-  }, [habitToDeleteParam, router, handleDeleteHabit]);
+  }, [scrollToHabitId, habits, api, current, router]);
 
 
   const handleEditHabit = (habit: Habit) => {
-    const details = encodeURIComponent(JSON.stringify(habit));
-    router.push(`/new?habit=${details}`);
+    router.push(`/new?habit_id=${habit.id}`);
   };
 
   const handleExpandToggle = (habitId: string) => {
@@ -345,23 +291,28 @@ function HomePageContent() {
     }
   };
   
-  const toggleStampForHabit = (habitId: string, day: number) => {
+  const toggleStampForHabit = async (habitId: string, day: number) => {
     if (!user) return;
-    setStampedState(prevState => {
-      const currentStamps = prevState[habitId] || [];
-      const newStamps = currentStamps.includes(day)
-        ? currentStamps.filter(d => d !== day)
-        : [...currentStamps, day];
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`stamps_${user.uid}_${habitId}`, JSON.stringify(newStamps));
+
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return;
+
+    const habitDocRef = doc(db, "users", user.uid, "habits", habitId);
+    const isStamped = habit.stamped.includes(day);
+
+    try {
+      if (isStamped) {
+        await updateDoc(habitDocRef, {
+          stamped: arrayRemove(day)
+        });
+      } else {
+        await updateDoc(habitDocRef, {
+          stamped: arrayUnion(day)
+        });
       }
-      
-      return {
-        ...prevState,
-        [habitId]: newStamps,
-      };
-    });
+    } catch (error) {
+      console.error("Error updating stamp:", error);
+    }
   };
 
   const handleSignOut = () => {
@@ -407,7 +358,6 @@ function HomePageContent() {
             >
               <StampCard
                 habit={expandedHabit}
-                stamped={stampedState[expandedHabit.id] || []}
                 toggleStamp={(day) => toggleStampForHabit(expandedHabit.id, day)}
                 onDelete={handleDeleteHabit}
                 onEdit={handleEditHabit}
@@ -470,7 +420,6 @@ function HomePageContent() {
                                     )}>
                                         <StampCard
                                             habit={habit}
-                                            stamped={stampedState[habit.id] || []}
                                             toggleStamp={(day) => toggleStampForHabit(habit.id, day)}
                                             onDelete={handleDeleteHabit}
                                             onEdit={handleEditHabit}
@@ -508,5 +457,3 @@ export default function HomePage() {
     </Suspense>
   );
 }
-
-    
