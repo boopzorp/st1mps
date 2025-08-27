@@ -38,6 +38,9 @@ export default function SignInPage() {
 
   return (
     <div className="relative min-h-screen w-full bg-zinc-900 text-white overflow-hidden">
+      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6">
+        <Link href="/" className="font-playfair text-3xl font-bold">Stamps</Link>
+      </header>
       <div
         className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
         aria-hidden="true"
