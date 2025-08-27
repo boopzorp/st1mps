@@ -215,6 +215,31 @@ function HomePageContent() {
       localStorage.setItem('habits', JSON.stringify(newHabits));
     }
   }, []);
+  
+  const handleDeleteHabit = useCallback((habitId: string, fromUrl = false) => {
+    const updatedHabits = habits.filter(h => h.id !== habitId);
+    updateHabits(updatedHabits);
+    
+    // Remove stamped state and from local storage
+    setStampedState(s => {
+      const newS = {...s};
+      delete newS[habitId];
+      return newS;
+    });
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(`stamps_${habitId}`);
+    }
+
+    // If the deleted habit was expanded, close it.
+    if (expandedHabitId === habitId) {
+      handleExpandToggle(habitId);
+    }
+    
+    // if called from button click, it reloads the page to remove param
+    if(!fromUrl) {
+        router.push(`/home?delete=${habitId}`, {scroll: false});
+    }
+  }, [habits, updateHabits, expandedHabitId, router]);
 
   // Load habits and their stamped state from localStorage
   useEffect(() => {
@@ -287,31 +312,6 @@ function HomePageContent() {
     }
   }, [newHabitParam, router]);
   
-  const handleDeleteHabit = useCallback((habitId: string, fromUrl = false) => {
-    const updatedHabits = habits.filter(h => h.id !== habitId);
-    updateHabits(updatedHabits);
-    
-    // Remove stamped state and from local storage
-    setStampedState(s => {
-      const newS = {...s};
-      delete newS[habitId];
-      return newS;
-    });
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(`stamps_${habitId}`);
-    }
-
-    // If the deleted habit was expanded, close it.
-    if (expandedHabitId === habitId) {
-      handleExpandToggle(habitId);
-    }
-    
-    // if called from button click, it reloads the page to remove param
-    if(!fromUrl) {
-        router.push(`/home?delete=${habitId}`, {scroll: false});
-    }
-  }, [habits, updateHabits, expandedHabitId, router]);
-
   // Handle deleting habits from URL (less common, but good to have)
   useEffect(() => {
     if(habitToDeleteParam) {
