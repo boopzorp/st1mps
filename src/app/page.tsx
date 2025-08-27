@@ -1,478 +1,211 @@
 
-"use client";
-
 import Link from "next/link";
-import { Ellipsis, Plus, Trash2, Edit, Award } from "lucide-react";
+import { Star, Heart, Check, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { StampIcon, StampIconName } from "@/components/icons";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel";
 
-
-interface Habit {
-  id: string;
-  titleLine1: string;
-  titleLine2: string;
-  subtitle: string;
-  description: string;
-  cardClass: string;
-  titleClass: string;
-  numStamps: number;
-  textColor: string;
-  line1Font: string;
-  line2Font: string;
-  stampLogo: StampIconName;
-  createdAt: string; // ISO string
-  endDate?: string; // ISO string
-}
-
-function StampCard({
-  habit,
-  stamped,
-  toggleStamp,
-  onDelete,
-  onEdit,
-  isExpanded,
-  onExpand,
+const StampCard = ({
+  className,
+  title,
+  subtitle,
+  icon: Icon,
+  stamps,
+  font,
+  bgColor,
+  textColor,
 }: {
-  habit: Habit;
-  stamped: number[];
-  toggleStamp: (day: number) => void;
-  onDelete: (habitId: string) => void;
-  onEdit: (habit: Habit) => void;
-  isExpanded: boolean;
-  onExpand: () => void;
-}) {
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent card expansion when clicking on interactive elements
-    if ((e.target as HTMLElement).closest('button, [role="menuitem"], a')) {
-      return;
-    }
-    onExpand();
-  };
-
-  const isComplete = habit.numStamps > 0 && stamped.length >= habit.numStamps;
-  const progressPercent = habit.numStamps > 0 ? Math.round((stamped.length / habit.numStamps) * 100) : 0;
-  
-  const numVisibleStamps = isExpanded ? habit.numStamps : 10;
-  const cardTextColor = isComplete ? '#422006' : habit.textColor;
-  
-  return (
-    <div
-      className={cn(
-        "relative rounded-lg p-6 transition-all duration-300 ease-in-out h-full flex flex-col justify-between",
-        isComplete ? 'bg-gradient-to-br from-yellow-300 to-amber-400 shadow-amber-500/50' : habit.cardClass,
-        !isExpanded && 'hover:shadow-xl'
-      )}
-      onClick={!isExpanded ? handleCardClick : undefined}
-    >
-      <div>
-        {isComplete && (
-            <div className="absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 -rotate-12 shadow-lg">
-                <Award className="h-4 w-4"/>
-                <span>Completed!</span>
-            </div>
-        )}
-        <div className="absolute top-2 right-2 z-30">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: cardTextColor}}>
-                <Ellipsis className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(habit)}>
-                <Edit className="mr-2 h-4 w-4" />
-                <span>Edit</span>
-              </DropdownMenuItem>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-                    <span className="text-red-500">Delete</span>
-                  </DropdownMenuItem>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your
-                      stamp card and all its progress.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete(habit.id)} className={cn("bg-red-500 hover:bg-red-600")}>Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <h2
-          className={`text-5xl font-bold ${habit.titleClass}`}
-          style={{ color: cardTextColor }}
-        >
-          <span className={cn(habit.line1Font)}>{habit.titleLine1}</span>
-          <br />
-          <span className={cn(habit.line2Font)}>{habit.titleLine2}</span>
-        </h2>
-        <p className="mt-2 text-sm opacity-60" style={{ color: cardTextColor }}>
-          {habit.subtitle} | {progressPercent}% Complete
-        </p>
-        <div className={cn(
-          "mt-6 grid gap-3 transition-all duration-300 overflow-y-auto",
-          isExpanded ? 'grid-cols-5 max-h-60' : 'grid-cols-4'
-          )}>
-          {Array.from({ length: Math.min(habit.numStamps, numVisibleStamps) }).map((_, i) => {
-            const day = i + 1;
-            const isStamped = stamped.includes(day);
-            return (
-              <button
-                key={i}
-                onClick={(e) => { e.stopPropagation(); toggleStamp(day); }}
-                className={cn(
-                  "aspect-square rounded-full flex items-center justify-center border-2 border-dashed transition-all",
-                  isStamped
-                    ? "border-transparent"
-                    : "border-black/20"
-                )}
-                style={{backgroundColor: isStamped ? cardTextColor: 'transparent', borderColor: `${cardTextColor}40`}}
-              >
-                {isStamped ? (
-                  <StampIcon
-                    name={habit.stampLogo || "check"}
-                    className="h-6 w-6"
-                    style={{color: isComplete ? '#fde047' : (habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white')}}
-                  />
-                ) : (
-                  <span className="text-sm opacity-50" style={{color: cardTextColor}}>{day}</span>
-                )}
-              </button>
-            )
-          })}
-          {habit.numStamps > numVisibleStamps && !isExpanded && (
-            <div className="aspect-square rounded-full flex items-center justify-center">
-              <Ellipsis style={{color: cardTextColor}} />
-            </div>
-          )}
-        </div>
+  className?: string;
+  title: string;
+  subtitle: string;
+  icon: React.ElementType;
+  stamps: number;
+  font: string;
+  bgColor: string;
+  textColor: string;
+}) => (
+  <div
+    className={cn(
+      "rounded-lg p-6 shadow-lg flex flex-col justify-between w-full h-full",
+      bgColor,
+      className
+    )}
+    style={{ color: textColor }}
+  >
+    <div>
+      <h3 className={cn("text-3xl font-bold break-words", font)}>{title}</h3>
+      <p className="mt-1 text-sm opacity-70">{subtitle}</p>
+      <div className="mt-6 grid grid-cols-5 gap-3">
+        {Array.from({ length: stamps }).map((_, i) => (
+          <div
+            key={i}
+            className="aspect-square rounded-full bg-black/10 flex items-center justify-center"
+          >
+            <Icon className="h-5 w-5 opacity-70" />
+          </div>
+        ))}
+        {Array.from({ length: 10 - stamps }).map((_, i) => (
+          <div
+            key={i + stamps}
+            className="aspect-square rounded-full border-2 border-dashed border-black/20"
+          ></div>
+        ))}
       </div>
-      <p
-        className="mt-6 text-sm text-center opacity-60"
-        style={{ color: cardTextColor }}
-      >
-        {habit.description}
-      </p>
     </div>
-  );
-}
+    <p className="mt-4 text-sm text-center opacity-60">
+      A little progress each day adds up to big results.
+    </p>
+  </div>
+);
 
-
-function HomePageContent() {
-  const router = useRouter();
-  const params = useSearchParams();
-  const newHabitParam = params.get("habit");
-  const habitToDeleteParam = params.get("delete");
-  
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [stampedState, setStampedState] = useState<Record<string, number[]>>({});
-  
-  const [expandedHabitId, setExpandedHabitId] = useState<string | null>(null);
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-  const [api, setApi] = useState<CarouselApi>()
-  const [current, setCurrent] = useState(0)
-
-  const updateHabits = useCallback((newHabits: Habit[]) => {
-    setHabits(newHabits);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('habits', JSON.stringify(newHabits));
-    }
-  }, []);
-
-  // Load habits and their stamped state from localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedHabits = localStorage.getItem('habits');
-      if (savedHabits) {
-        try {
-          const parsedHabits = JSON.parse(savedHabits);
-          if (Array.isArray(parsedHabits)) {
-            setHabits(parsedHabits);
-            // Load stamped state for each habit
-            const newStampedState: Record<string, number[]> = {};
-            parsedHabits.forEach((habit: Habit) => {
-              const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
-              newStampedState[habit.id] = savedStamps ? JSON.parse(savedStamps) : [];
-            });
-            setStampedState(newStampedState);
-          }
-        } catch (e) {
-          console.error("Failed to parse habits from localStorage", e);
-        }
-      }
-    }
-  }, []);
-
-  // Update carousel state
-  useEffect(() => {
-    if (!api) return;
-    setCurrent(api.selectedScrollSnap());
-    const handleSelect = () => {
-      setCurrent(api.selectedScrollSnap());
-    };
-    api.on("select", handleSelect);
-    return () => {
-      api.off("select", handleSelect);
-    };
-  }, [api]);
-
-  // Handle adding/updating habits from URL
-  useEffect(() => {
-    if (newHabitParam) {
-      try {
-        const newHabit = JSON.parse(decodeURIComponent(newHabitParam));
-        setHabits(prevHabits => {
-            const existingHabitIndex = prevHabits.findIndex(h => h.id.split('-')[0] === newHabit.id.split('-')[0]);
-            let updatedHabits;
-            if (existingHabitIndex !== -1) {
-                updatedHabits = [...prevHabits];
-                const oldHabit = updatedHabits[existingHabitIndex];
-                if (oldHabit.id !== newHabit.id) {
-                   if (typeof window !== 'undefined') {
-                      localStorage.removeItem(`stamps_${oldHabit.id}`);
-                   }
-                   setStampedState(s => ({...s, [oldHabit.id]: [], [newHabit.id]: []}));
-                }
-                updatedHabits[existingHabitIndex] = newHabit;
-            } else {
-                updatedHabits = [...prevHabits, newHabit];
-                setStampedState(s => ({...s, [newHabit.id]: []}));
-            }
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('habits', JSON.stringify(updatedHabits));
-            }
-            return updatedHabits;
-        });
-        router.replace('/', {scroll: false});
-      } catch (error) {
-        console.error("Failed to process habit from URL", error);
-      }
-    }
-  }, [newHabitParam, router]);
-  
-  // Handle deleting habits from URL (less common, but good to have)
-  useEffect(() => {
-    if(habitToDeleteParam) {
-      handleDeleteHabit(habitToDeleteParam, true);
-      router.replace('/', {scroll: false});
-    }
-  }, [habitToDeleteParam, router]);
-
-
-  const handleDeleteHabit = (habitId: string, fromUrl = false) => {
-    const updatedHabits = habits.filter(h => h.id !== habitId);
-    updateHabits(updatedHabits);
-    
-    // Remove stamped state and from local storage
-    setStampedState(s => {
-      const newS = {...s};
-      delete newS[habitId];
-      return newS;
-    });
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(`stamps_${habitId}`);
-    }
-
-    // If the deleted habit was expanded, close it.
-    if (expandedHabitId === habitId) {
-      handleExpandToggle(habitId);
-    }
-    
-    // if called from button click, it reloads the page to remove param
-    if(!fromUrl) {
-        router.push(`/?delete=${habitId}`, {scroll: false});
-    }
-  };
-
-  const handleEditHabit = (habit: Habit) => {
-    const details = encodeURIComponent(JSON.stringify(habit));
-    router.push(`/new?habit=${details}`);
-  };
-
-  const handleExpandToggle = (habitId: string) => {
-    if (expandedHabitId === habitId) {
-      setIsAnimatingOut(true);
-      setTimeout(() => {
-        setExpandedHabitId(null);
-        setIsAnimatingOut(false);
-      }, 300); // Duration of the fade-out animation
-    } else {
-      setExpandedHabitId(habitId);
-    }
-  };
-  
-  const toggleStampForHabit = (habitId: string, day: number) => {
-    setStampedState(prevState => {
-      const currentStamps = prevState[habitId] || [];
-      const newStamps = currentStamps.includes(day)
-        ? currentStamps.filter(d => d !== day)
-        : [...currentStamps, day];
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`stamps_${habitId}`, JSON.stringify(newStamps));
-      }
-      
-      return {
-        ...prevState,
-        [habitId]: newStamps,
-      };
-    });
-  };
-
-  const expandedHabit = habits.find(h => h.id === expandedHabitId);
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center overflow-hidden">
-        
-        <div 
-            className={cn(
-                "fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300",
-                (expandedHabitId && !isAnimatingOut) ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            )}
-            onClick={() => expandedHabitId && handleExpandToggle(expandedHabitId)}
-        />
-        
-        {expandedHabit && (
-            <div
-              className={cn(
-                "fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300",
-                (expandedHabitId && !isAnimatingOut) ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-              )}
-              onClick={() => handleExpandToggle(expandedHabit.id)}
-            >
-                <div 
-                  className="w-full max-w-md" 
-                  onClick={(e) => e.stopPropagation()}
-                >
-                    <StampCard
-                        habit={expandedHabit}
-                        stamped={stampedState[expandedHabit.id] || []}
-                        toggleStamp={(day) => toggleStampForHabit(expandedHabit.id, day)}
-                        onDelete={handleDeleteHabit}
-                        onEdit={handleEditHabit}
-                        isExpanded={true}
-                        onExpand={() => handleExpandToggle(expandedHabit.id)}
-                    />
-                </div>
-            </div>
-        )}
+    <div className="min-h-screen bg-zinc-900 text-white overflow-hidden">
+      <div className="relative isolate">
+        <div
+          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+          aria-hidden="true"
+        >
+          <div
+            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+          />
+        </div>
 
-        <div className="w-full max-w-lg flex-1 flex flex-col justify-center">
-            <header className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-20">
-                <div className="relative">
-                  <h1 className="font-playfair text-4xl">Stamps</h1>
-                   <div className="font-caveat absolute top-10 left-12 text-pink-900 bg-pink-300 px-2 rounded -rotate-12">
-                    @username
+        <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6">
+          <h1 className="font-playfair text-3xl font-bold">Stamps</h1>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" className="text-white hover:bg-white/10">
+              Sign In
+            </Button>
+            <Button className="bg-white text-black rounded-full hover:bg-gray-200">
+              Sign Up
+            </Button>
+          </div>
+        </header>
+
+        <main className="relative z-10">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8 pt-32 sm:pt-48 lg:pt-56">
+            <div className="text-center">
+              <h2 className="text-4xl font-bold tracking-tight text-white sm:text-6xl font-anton">
+                The Fun Way to Build Great Habits
+              </h2>
+              <p className="mt-6 text-lg leading-8 text-gray-300 max-w-2xl mx-auto">
+                Turn your goals into a game. Create beautiful, shareable stamp
+                cards, track your progress, and stay motivated every single day.
+              </p>
+              <div className="mt-10 flex items-center justify-center gap-x-6">
+                <Button
+                  size="lg"
+                  className="rounded-full bg-indigo-500 hover:bg-indigo-400 text-lg"
+                >
+                  Get Started for Free
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative mt-16 sm:mt-24">
+            <div className="lg:mx-auto lg:max-w-7xl lg:px-8">
+              <div className="relative lg:h-[45rem] overflow-hidden">
+                <div className="absolute top-0 grid h-full w-full grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+                  <div className="flex flex-col gap-6">
+                    <StampCard
+                        title="READ EVERY DAY"
+                        subtitle="Finish 10 books"
+                        icon={Book}
+                        stamps={7}
+                        font="font-anton"
+                        bgColor="bg-rose-300"
+                        textColor="text-rose-950"
+                        className="rotate-[-3deg]"
+                    />
+                     <StampCard
+                        title="MORNING RUNS"
+                        subtitle="30 days of cardio"
+                        icon={Heart}
+                        stamps={10}
+                        font="font-vt323"
+                        bgColor="bg-teal-300"
+                        textColor="text-teal-950"
+                        className="rotate-[2deg]"
+                    />
+                  </div>
+                   <div className="flex flex-col gap-6 mt-16">
+                     <StampCard
+                        title="DRINK WATER"
+                        subtitle="8 glasses a day"
+                        icon={Check}
+                        stamps={4}
+                        font="font-sans"
+                        bgColor="bg-sky-300"
+                        textColor="text-sky-950"
+                        className="rotate-[1deg]"
+                    />
+                    <StampCard
+                        title="PRACTICE GUITAR"
+                        subtitle="100 hours of practice"
+                        icon={Star}
+                        stamps={8}
+                        font="font-caveat"
+                        bgColor="bg-amber-300"
+                        textColor="text-amber-950"
+                        className="rotate-[-4deg]"
+                    />
+                  </div>
+                   <div className="hidden lg:flex flex-col gap-6">
+                     <StampCard
+                        title="CODE SOMETHING"
+                        subtitle="Daily coding challenge"
+                        icon={Star}
+                        stamps={9}
+                        font="font-source-code-pro"
+                        bgColor="bg-indigo-300"
+                        textColor="text-indigo-950"
+                        className="rotate-[4deg]"
+                    />
+                    <StampCard
+                        title="NO SODA"
+                        subtitle="30 day challenge"
+                        icon={Check}
+                        stamps={6}
+                        font="font-playfair"
+                        bgColor="bg-slate-300"
+                        textColor="text-slate-950"
+                        className="rotate-[-1deg]"
+                    />
+                  </div>
+                  <div className="hidden lg:flex flex-col gap-6 mt-16">
+                    <StampCard
+                        title="MEDITATE"
+                        subtitle="15 minutes daily"
+                        icon={Heart}
+                        stamps={10}
+                        font="font-playfair italic"
+                        bgColor="bg-fuchsia-300"
+                        textColor="text-fuchsia-950"
+                        className="rotate-[-2deg]"
+                    />
+                    <StampCard
+                        title="WAKE UP EARLY"
+                        subtitle="6 AM club"
+                        icon={Star}
+                        stamps={5}
+                        font="font-anton"
+                        bgColor="bg-lime-300"
+                        textColor="text-lime-950"
+                        className="rotate-[3deg]"
+                    />
                   </div>
                 </div>
-                <Button
-                    size="icon"
-                    className="rounded-full bg-white text-black"
-                    asChild
-                >
-                    <Link href="/new">
-                        <Plus />
-                    </Link>
-                </Button>
-            </header>
-
-            <main className="p-4 mt-24 flex-1 flex items-center">
-                {habits.length > 0 ? (
-                    <Carousel 
-                        setApi={setApi}
-                        opts={{ align: "center", loop: false }}
-                        className="w-full"
-                    >
-                        <CarouselContent className="-ml-4">
-                            {habits.map((habit, index) => (
-                                <CarouselItem 
-                                    key={habit.id} 
-                                    className={cn(
-                                        "pl-4 transition-opacity duration-300",
-                                        "basis-5/6",
-                                        expandedHabitId === habit.id ? 'opacity-0' : 'opacity-100'
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "transition-all duration-300",
-                                        index !== current ? 'scale-90 opacity-70' : 'scale-100 opacity-100',
-                                    )}>
-                                        <StampCard
-                                            habit={habit}
-                                            stamped={stampedState[habit.id] || []}
-                                            toggleStamp={(day) => toggleStampForHabit(habit.id, day)}
-                                            onDelete={handleDeleteHabit}
-                                            onEdit={handleEditHabit}
-                                            isExpanded={false}
-                                            onExpand={() => handleExpandToggle(habit.id)}
-                                        />
-                                    </div>
-                                </CarouselItem>
-                            ))}
-                        </CarouselContent>
-                        {!expandedHabitId && habits.length > 1 && (
-                            <>
-                                <CarouselPrevious className="left-[-5px] sm:left-[-15px] z-20"/>
-                                <CarouselNext className="right-[-5px] sm:right-[-15px] z-20"/>
-                            </>
-                        )}
-                    </Carousel>
-                ) : (
-                    <div className="text-center text-gray-500 w-full">
-                        <p>No stamps yet.</p>
-                        <p>Click the '+' button to create one.</p>
-                    </div>
-                )}
-            </main>
-        </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
-  );
-}
-
-
-export default function HomePage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <HomePageContent />
-    </Suspense>
   );
 }

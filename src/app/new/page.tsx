@@ -169,7 +169,7 @@ export default function NewHabitPage() {
     };
 
     const details = encodeURIComponent(JSON.stringify(newHabit))
-    router.push(`/?habit=${details}`);
+    router.push(`/home?habit=${details}`);
   };
 
   if (!isClient) {
@@ -181,7 +181,7 @@ export default function NewHabitPage() {
     <div className="max-w-md mx-auto w-full">
       <header className="flex items-center p-4">
         <Link
-          href="/"
+          href="/home"
           className={cn(
             buttonVariants({ variant: "ghost" }),
             "text-white hover:bg-zinc-800"
@@ -397,5 +397,3 @@ export default function NewHabitPage() {
     </div>
   );
 }
-
-    
