@@ -53,42 +53,62 @@ interface Habit {
 
 function StampCard({
   habit,
-  onUpdateStamps,
   onDelete,
   onEdit,
+  isExpanded,
+  onExpand,
 }: {
   habit: Habit;
-  onUpdateStamps: (habitId: string, stamps: number[]) => void;
   onDelete: (habitId: string) => void;
   onEdit: (habit: Habit) => void;
+  isExpanded: boolean;
+  onExpand: () => void;
 }) {
   const [stamped, setStamped] = useState<number[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
     setStamped(savedStamps ? JSON.parse(savedStamps) : []);
   }, [habit.id]);
   
-  const handleCardClick = () => {
-    const details = encodeURIComponent(JSON.stringify(habit));
-    router.push(`/habit/${habit.id}?details=${details}`);
+  const toggleStamp = (day: number) => {
+    const newStamped = stamped.includes(day)
+      ? stamped.filter((d) => d !== day)
+      : [...stamped, day];
+    setStamped(newStamped);
+    localStorage.setItem(`stamps_${habit.id}`, JSON.stringify(newStamped));
   };
+
+  const progressPercent = habit.numStamps > 0 ? Math.round((stamped.length / habit.numStamps) * 100) : 0;
+  
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Let clicks on buttons pass through
+    if ((e.target as HTMLElement).closest('button, [role="menuitem"]')) {
+      return;
+    }
+    onExpand();
+  }
+
+  const numVisibleStamps = isExpanded ? habit.numStamps : 11;
 
   return (
     <div
-      className={`relative rounded-lg p-6 transition-transform duration-300 hover:transform hover:scale-105 hover:shadow-2xl hover:z-10 cursor-pointer ${habit.cardClass}`}
+      className={cn(
+        "relative rounded-lg p-6 transition-all duration-300 ease-in-out cursor-pointer",
+        isExpanded ? 'transform scale-105 shadow-2xl z-10' : 'hover:transform hover:scale-105 hover:shadow-2xl hover:z-10',
+        habit.cardClass
+      )}
       onClick={handleCardClick}
     >
        <div className="absolute top-2 right-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}} onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}}>
               <Ellipsis className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenuItem onClick={(e) => {e.stopPropagation(); onEdit(habit)}}>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(habit)}>
               <Edit className="mr-2 h-4 w-4" />
               <span>Edit</span>
             </DropdownMenuItem>
@@ -99,7 +119,7 @@ function StampCard({
                   <span className="text-red-500">Delete</span>
                 </DropdownMenuItem>
               </AlertDialogTrigger>
-              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+              <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
@@ -109,7 +129,7 @@ function StampCard({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(habit.id)}>Delete</AlertDialogAction>
+                  <AlertDialogAction onClick={() => onDelete(habit.id)} className={cn("bg-red-500 hover:bg-red-600")}>Delete</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -126,15 +146,19 @@ function StampCard({
         <span className={cn(habit.line2Font)}>{habit.titleLine2}</span>
       </h2>
       <p className="mt-2 text-sm opacity-60" style={{ color: habit.textColor }}>
-        {habit.subtitle}
+        {habit.subtitle} | {progressPercent}% Complete
       </p>
-      <div className="mt-6 grid grid-cols-4 gap-3">
-        {Array.from({ length: habit.numStamps > 12 ? 11 : habit.numStamps }).map((_, i) => {
+      <div className={cn(
+        "mt-6 grid gap-3 transition-all duration-300",
+        isExpanded ? 'grid-cols-4' : 'grid-cols-4'
+        )}>
+        {Array.from({ length: numVisibleStamps }).map((_, i) => {
           const day = i + 1;
           const isStamped = stamped.includes(day);
           return (
-             <div
+             <button
               key={i}
+              onClick={(e) => { e.stopPropagation(); toggleStamp(day); }}
               className={cn(
                 "aspect-square rounded-full flex items-center justify-center border-2 border-dashed transition-all",
                 isStamped
@@ -152,10 +176,10 @@ function StampCard({
               ) : (
                 <span className="text-sm opacity-50" style={{color: habit.textColor}}>{day}</span>
               )}
-            </div>
+            </button>
           )
         })}
-         {habit.numStamps > 12 && (
+         {habit.numStamps > 11 && !isExpanded && (
           <div className="aspect-square rounded-full flex items-center justify-center">
              <Ellipsis style={{color: habit.textColor}} />
           </div>
@@ -177,6 +201,7 @@ function HomePageContent() {
   const newHabitParam = params.get("habit");
   const habitToDeleteParam = params.get("delete");
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [expandedHabitId, setExpandedHabitId] = useState<string | null>(null);
 
   const updateHabits = useCallback((newHabits: Habit[]) => {
     setHabits(newHabits);
@@ -208,6 +233,7 @@ function HomePageContent() {
             if (existingHabitIndex !== -1) {
                 updatedHabits = [...prevHabits];
                 const oldHabit = updatedHabits[existingHabitIndex];
+                // If ID is new but root is same, it's an edit, so remove old stamps
                 if (oldHabit.id !== newHabit.id) {
                    if (typeof window !== 'undefined') {
                       localStorage.removeItem(`stamps_${oldHabit.id}`);
@@ -224,6 +250,7 @@ function HomePageContent() {
             return updatedHabits;
         });
 
+        // Clean the URL
         router.replace('/', {scroll: false});
 
       } catch (error) {
@@ -243,12 +270,6 @@ function HomePageContent() {
     }
   }, [habitToDeleteParam, habits, updateHabits, router]);
 
-  const handleUpdateStamps = (habitId: string, newStamps: number[]) => {
-    localStorage.setItem(`stamps_${habitId}`, JSON.stringify(newStamps));
-    // We might need to trigger a re-render if the child component's state change doesn't bubble up
-    setHabits(prev => [...prev]);
-  };
-  
   const handleDeleteHabit = (habitId: string) => {
     const updatedHabits = habits.filter(h => h.id !== habitId);
     updateHabits(updatedHabits);
@@ -261,6 +282,10 @@ function HomePageContent() {
     const details = encodeURIComponent(JSON.stringify(habit));
     router.push(`/new?habit=${details}`);
   };
+
+  const handleExpandToggle = (habitId: string) => {
+    setExpandedHabitId(prevId => prevId === habitId ? null : habitId);
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -279,16 +304,23 @@ function HomePageContent() {
       </header>
       <main className="p-4">
         {habits.length > 0 ? (
-          <Carousel className="w-full">
-            <CarouselContent>
+          <Carousel 
+            opts={{
+              align: "center",
+              loop: false,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2">
               {habits.map((habit) => (
-                <CarouselItem key={habit.id}>
+                <CarouselItem key={habit.id} className="pl-4 basis-4/5 md:basis-3/4">
                   <div className="p-1">
                     <StampCard
                       habit={habit}
-                      onUpdateStamps={handleUpdateStamps}
                       onDelete={handleDeleteHabit}
                       onEdit={handleEditHabit}
+                      isExpanded={expandedHabitId === habit.id}
+                      onExpand={() => handleExpandToggle(habit.id)}
                     />
                   </div>
                 </CarouselItem>
@@ -296,8 +328,8 @@ function HomePageContent() {
             </CarouselContent>
             {habits.length > 1 && (
               <>
-                <CarouselPrevious />
-                <CarouselNext />
+                <CarouselPrevious className="left-[-10px] sm:left-[-20px]"/>
+                <CarouselNext className="right-[-10px] sm:right-[-20px]"/>
               </>
             )}
           </Carousel>
@@ -320,3 +352,5 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
