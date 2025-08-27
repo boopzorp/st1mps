@@ -50,16 +50,31 @@ const backgroundOptions = [
   { value: "bg-[#E6F4EA]", label: "Mint Green" },
 ];
 
+const initialFormData = {
+  titleLine1: "",
+  line1Font: "font-sans",
+  titleLine2: "",
+  line2Font: "font-sans",
+  numStamps: 0,
+  endDate: undefined as Date | undefined,
+  condition: "",
+  themeColor: "#3B6EC5",
+  bgColor: "bg-[#F3F0E6]",
+  stampLogo: 'star' as StampIconName,
+  createdAt: new Date(),
+};
+
+
 export default function NewHabitPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isClient, setIsClient] = useState(false);
   
   const [formData, setFormData] = useState(() => {
     const habitParam = searchParams.get('habit');
     if (habitParam) {
       try {
         const decodedHabit = JSON.parse(decodeURIComponent(habitParam));
-        // A simple check to ensure it's a habit object
         if(decodedHabit.id) {
            return {
             titleLine1: decodedHabit.titleLine1,
@@ -79,22 +94,20 @@ export default function NewHabitPage() {
         console.error("Failed to parse habit from URL", e);
       }
     }
-    return {
-      titleLine1: "",
-      line1Font: "font-sans",
-      titleLine2: "",
-      line2Font: "font-sans",
-      numStamps: 0,
-      endDate: undefined as Date | undefined,
-      condition: "",
-      themeColor: "#3B6EC5",
-      bgColor: "bg-[#F3F0E6]",
-      stampLogo: 'star' as StampIconName,
-      createdAt: new Date(),
-    };
+    return initialFormData;
   });
 
   const [matchDays, setMatchDays] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+    const habitParam = searchParams.get('habit');
+    if (habitParam) {
+       // Already handled in useState initializer
+    } else {
+      setFormData(prev => ({ ...prev, createdAt: new Date() }));
+    }
+  }, [searchParams]);
 
   const timePeriodDays = formData.endDate ? differenceInCalendarDays(formData.endDate, formData.createdAt) + 1 : 0;
 
@@ -159,7 +172,9 @@ export default function NewHabitPage() {
     router.push(`/?habit=${details}`);
   };
 
-  
+  if (!isClient) {
+    return null; // or a loading spinner
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -382,5 +397,3 @@ export default function NewHabitPage() {
     </div>
   );
 }
-
-    
