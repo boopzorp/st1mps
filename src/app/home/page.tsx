@@ -68,6 +68,9 @@ const stickerColorOptions = [
     { bg: 'bg-yellow-300', text: 'text-yellow-900' },
     { bg: 'bg-purple-300', text: 'text-purple-900' },
     { bg: 'bg-gray-300', text: 'text-gray-900' },
+    { bg: 'bg-teal-500', text: 'text-white' },
+    { bg: 'bg-orange-500', text: 'text-white' },
+    { bg: 'bg-lime-500', text: 'text-black' },
 ];
 
 
@@ -149,7 +152,7 @@ function StampCard({
     <div
       ref={cardRef}
       className={cn(
-        "relative rounded-lg p-6 transition-all duration-300 ease-in-out h-full flex flex-col justify-between",
+        "relative rounded-lg p-6 transition-all duration-500 ease-in-out h-full flex flex-col justify-between overflow-hidden",
         isComplete ? 'bg-gradient-to-br from-yellow-300 to-amber-400 shadow-amber-500/50' : habit.cardClass,
         !isExpanded && 'hover:shadow-xl'
       )}
@@ -157,7 +160,11 @@ function StampCard({
     >
       <div>
         {isComplete && (
-            <div className="absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 -rotate-12 shadow-lg">
+            <div className={cn(
+              "absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg",
+              "transition-all duration-300 ease-in-out transform",
+              isComplete ? "scale-100 -rotate-12" : "scale-0 rotate-0"
+            )}>
                 <Award className="h-4 w-4"/>
                 <span>Completed!</span>
             </div>
@@ -210,7 +217,7 @@ function StampCard({
 
         <h2
           className={cn(
-            "text-2xl sm:text-3xl md:text-4xl font-bold break-words",
+            "text-2xl sm:text-3xl lg:text-4xl font-bold break-words",
             habit.titleClass
           )}
           style={{ color: cardTextColor }}
@@ -242,7 +249,7 @@ function StampCard({
                 style={{backgroundColor: isStamped ? cardTextColor: 'transparent', borderColor: `${cardTextColor}40`}}
               >
                 <StampIcon
-                    name={habit.stampLogo || "check"}
+                    name={habit.stampLogo || "star"}
                     className={cn("h-6 w-6 transition-all duration-300 transform", isStamped ? 'scale-100 opacity-100' : 'scale-0 opacity-0')}
                     style={{color: isComplete ? '#fde047' : (habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white')}}
                   />
@@ -287,53 +294,50 @@ function HomePageContent() {
   const auth = getAuth(app);
   
   useEffect(() => {
-    let habitsUnsubscribe: Unsubscribe | undefined;
-    let prefsUnsubscribe: Unsubscribe | undefined;
-
     const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser) {
-        // User is logged in, set up listeners
-        const userDocRef = doc(db, "users", currentUser.uid);
-        const habitsQuery = query(collection(userDocRef, "habits"));
-        habitsUnsubscribe = onSnapshot(habitsQuery, (querySnapshot) => {
-          const userHabits = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          } as Habit));
-          setHabits(userHabits);
-        }, (error) => {
-          console.error("Error fetching habits:", error);
-        });
-  
-        const userPrefsDocRef = doc(db, "user_preferences", currentUser.uid);
-        prefsUnsubscribe = onSnapshot(userPrefsDocRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const prefs = docSnap.data();
-            const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
-            if (selectedColor) {
-              setStickerColor(selectedColor);
-            }
-          }
-        }, (error) => {
-          console.error("Error fetching user preferences:", error);
-        });
-
-      } else {
-        // User is logged out, clean up
-        setHabits([]);
-        if (habitsUnsubscribe) habitsUnsubscribe();
-        if (prefsUnsubscribe) prefsUnsubscribe();
+      if (!currentUser) {
+        setHabits([]); // Clear habits on logout
         router.push("/signin");
       }
     });
+
+    let habitsUnsubscribe: Unsubscribe | undefined;
+    let prefsUnsubscribe: Unsubscribe | undefined;
+
+    if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      const habitsQuery = query(collection(userDocRef, "habits"));
+      habitsUnsubscribe = onSnapshot(habitsQuery, (querySnapshot) => {
+        const userHabits = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        } as Habit));
+        setHabits(userHabits);
+      }, (error) => {
+        console.error("Error fetching habits:", error);
+      });
+
+      const userPrefsDocRef = doc(db, "user_preferences", user.uid);
+      prefsUnsubscribe = onSnapshot(userPrefsDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const prefs = docSnap.data();
+          const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
+          if (selectedColor) {
+            setStickerColor(selectedColor);
+          }
+        }
+      }, (error) => {
+        console.error("Error fetching user preferences:", error);
+      });
+    }
 
     return () => {
       authUnsubscribe();
       if (habitsUnsubscribe) habitsUnsubscribe();
       if (prefsUnsubscribe) prefsUnsubscribe();
     };
-  }, [auth, router]);
+  }, [user, router]);
 
 
   const handleDeleteHabit = useCallback(async (habitId: string) => {
