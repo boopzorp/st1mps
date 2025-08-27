@@ -77,11 +77,11 @@ export default function LandingPage() {
         <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6">
           <h1 className="font-playfair text-3xl font-bold">Stamps</h1>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" className="text-white hover:bg-white/10">
-              Sign In
+            <Button variant="ghost" className="text-white hover:bg-white/10" asChild>
+              <Link href="/signin">Sign In</Link>
             </Button>
-            <Button className="bg-white text-black rounded-full hover:bg-gray-200">
-              Sign Up
+            <Button className="bg-white text-black rounded-full hover:bg-gray-200" asChild>
+              <Link href="/signup">Sign Up</Link>
             </Button>
           </div>
         </header>
