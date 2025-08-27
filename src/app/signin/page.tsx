@@ -1,12 +1,41 @@
 
+"use client";
+
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StampCard } from '@/components/landing/stamp-card';
 import { Heart, Book } from 'lucide-react';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Terminal } from 'lucide-react';
 
 export default function SignInPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const auth = getAuth(app);
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/home');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-full bg-zinc-900 text-white overflow-hidden">
       <div
@@ -24,7 +53,7 @@ export default function SignInPage() {
 
       <div className="container relative z-10 flex min-h-screen items-center justify-center py-12">
         <div className="grid w-full max-w-4xl grid-cols-1 md:grid-cols-2 gap-x-16">
-          <div className="relative md:flex items-center justify-center hidden">
+          <div className="relative items-center justify-center hidden md:flex">
              <div className="relative w-full h-full">
                 <StampCard
                     title="MORNING RUNS"
@@ -50,7 +79,7 @@ export default function SignInPage() {
           </div>
 
           <div className="w-full max-w-md mx-auto relative">
-            <div className="md:hidden absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 items-center justify-center md:hidden">
                <div className="relative w-full h-full">
                   <StampCard
                       title="MORNING RUNS"
@@ -75,12 +104,19 @@ export default function SignInPage() {
                </div>
             </div>
 
-            <div className="relative z-10 space-y-8 rounded-lg bg-zinc-900 p-8 sm:p-10 shadow-2xl backdrop-blur-sm md:bg-zinc-900/50">
+            <div className="relative z-10 space-y-8 rounded-lg bg-zinc-900 p-8 sm:p-10 shadow-2xl backdrop-blur-sm md:bg-zinc-900">
               <div className="text-center">
                 <h1 className="font-playfair text-4xl font-bold">Welcome Back</h1>
                 <p className="mt-2 text-gray-400">Sign in to continue your journey.</p>
               </div>
-              <form className="space-y-6">
+              <form onSubmit={handleSignIn} className="space-y-6">
+                {error && (
+                   <Alert variant="destructive">
+                     <Terminal className="h-4 w-4" />
+                     <AlertTitle>Authentication Error</AlertTitle>
+                     <AlertDescription>{error}</AlertDescription>
+                   </Alert>
+                )}
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -89,6 +125,8 @@ export default function SignInPage() {
                     type="email"
                     autoComplete="email"
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="mt-1 block w-full appearance-none rounded-md border-zinc-700 bg-zinc-800 px-3 py-2 placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
@@ -100,15 +138,18 @@ export default function SignInPage() {
                     type="password"
                     autoComplete="current-password"
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="mt-1 block w-full appearance-none rounded-md border-zinc-700 bg-zinc-800 px-3 py-2 placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div>
                   <Button
                     type="submit"
-                    className="w-full rounded-full bg-indigo-500 py-3 text-lg font-semibold text-white hover:bg-indigo-400"
+                    disabled={loading}
+                    className="w-full rounded-full bg-indigo-500 py-3 text-lg font-semibold text-white hover:bg-indigo-400 disabled:bg-indigo-400"
                   >
-                    Sign In
+                    {loading ? 'Signing In...' : 'Sign In'}
                   </Button>
                 </div>
               </form>
@@ -125,3 +166,5 @@ export default function SignInPage() {
     </div>
   );
 }
+
+    

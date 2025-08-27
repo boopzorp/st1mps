@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Ellipsis, Plus, Trash2, Edit, Award } from "lucide-react";
+import { Ellipsis, Plus, Trash2, Edit, Award, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState, useCallback } from "react";
@@ -23,7 +23,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Carousel,
@@ -33,6 +32,8 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import { getAuth, onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { app } from "@/lib/firebase";
 
 
 interface Habit {
@@ -201,6 +202,7 @@ function HomePageContent() {
   const newHabitParam = params.get("habit");
   const habitToDeleteParam = params.get("delete");
   
+  const [user, setUser] = useState<User | null>(null);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [stampedState, setStampedState] = useState<Record<string, number[]>>({});
   
@@ -209,51 +211,59 @@ function HomePageContent() {
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
 
+  const auth = getAuth(app);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        router.push("/signin");
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, router]);
+
   const updateHabits = useCallback((newHabits: Habit[]) => {
     setHabits(newHabits);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('habits', JSON.stringify(newHabits));
+    if (typeof window !== 'undefined' && user) {
+      localStorage.setItem(`habits_${user.uid}`, JSON.stringify(newHabits));
     }
-  }, []);
+  }, [user]);
 
   const handleDeleteHabit = useCallback((habitId: string, fromUrl = false) => {
     const updatedHabits = habits.filter(h => h.id !== habitId);
     updateHabits(updatedHabits);
     
-    // Remove stamped state and from local storage
     setStampedState(s => {
       const newS = {...s};
       delete newS[habitId];
       return newS;
     });
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(`stamps_${habitId}`);
+    if (typeof window !== 'undefined' && user) {
+      localStorage.removeItem(`stamps_${user.uid}_${habitId}`);
     }
 
-    // If the deleted habit was expanded, close it.
     if (expandedHabitId === habitId) {
       handleExpandToggle(habitId);
     }
     
-    // if called from button click, it reloads the page to remove param
     if(!fromUrl) {
         router.push(`/home?delete=${habitId}`, {scroll: false});
     }
-  }, [habits, updateHabits, expandedHabitId, router]);
+  }, [habits, updateHabits, expandedHabitId, router, user]);
   
-  // Load habits and their stamped state from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedHabits = localStorage.getItem('habits');
+    if (typeof window !== 'undefined' && user) {
+      const savedHabits = localStorage.getItem(`habits_${user.uid}`);
       if (savedHabits) {
         try {
           const parsedHabits = JSON.parse(savedHabits);
           if (Array.isArray(parsedHabits)) {
             setHabits(parsedHabits);
-            // Load stamped state for each habit
             const newStampedState: Record<string, number[]> = {};
             parsedHabits.forEach((habit: Habit) => {
-              const savedStamps = localStorage.getItem(`stamps_${habit.id}`);
+              const savedStamps = localStorage.getItem(`stamps_${user.uid}_${habit.id}`);
               newStampedState[habit.id] = savedStamps ? JSON.parse(savedStamps) : [];
             });
             setStampedState(newStampedState);
@@ -263,9 +273,8 @@ function HomePageContent() {
         }
       }
     }
-  }, []);
+  }, [user]);
 
-  // Update carousel state
   useEffect(() => {
     if (!api) return;
     setCurrent(api.selectedScrollSnap());
@@ -278,9 +287,8 @@ function HomePageContent() {
     };
   }, [api]);
 
-  // Handle adding/updating habits from URL
   useEffect(() => {
-    if (newHabitParam) {
+    if (newHabitParam && user) {
       try {
         const newHabit = JSON.parse(decodeURIComponent(newHabitParam));
         setHabits(prevHabits => {
@@ -291,7 +299,7 @@ function HomePageContent() {
                 const oldHabit = updatedHabits[existingHabitIndex];
                 if (oldHabit.id !== newHabit.id) {
                    if (typeof window !== 'undefined') {
-                      localStorage.removeItem(`stamps_${oldHabit.id}`);
+                      localStorage.removeItem(`stamps_${user.uid}_${oldHabit.id}`);
                    }
                    setStampedState(s => ({...s, [oldHabit.id]: [], [newHabit.id]: []}));
                 }
@@ -301,7 +309,7 @@ function HomePageContent() {
                 setStampedState(s => ({...s, [newHabit.id]: []}));
             }
             if (typeof window !== 'undefined') {
-                localStorage.setItem('habits', JSON.stringify(updatedHabits));
+                localStorage.setItem(`habits_${user.uid}`, JSON.stringify(updatedHabits));
             }
             return updatedHabits;
         });
@@ -310,9 +318,8 @@ function HomePageContent() {
         console.error("Failed to process habit from URL", error);
       }
     }
-  }, [newHabitParam, router]);
+  }, [newHabitParam, router, user]);
   
-  // Handle deleting habits from URL (less common, but good to have)
   useEffect(() => {
     if(habitToDeleteParam) {
       handleDeleteHabit(habitToDeleteParam, true);
@@ -332,22 +339,22 @@ function HomePageContent() {
       setTimeout(() => {
         setExpandedHabitId(null);
         setIsAnimatingOut(false);
-      }, 300); // Duration of the fade-out animation
+      }, 300); 
     } else {
       setExpandedHabitId(habitId);
     }
   };
   
   const toggleStampForHabit = (habitId: string, day: number) => {
+    if (!user) return;
     setStampedState(prevState => {
       const currentStamps = prevState[habitId] || [];
       const newStamps = currentStamps.includes(day)
         ? currentStamps.filter(d => d !== day)
         : [...currentStamps, day];
       
-      // Save to localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem(`stamps_${habitId}`, JSON.stringify(newStamps));
+        localStorage.setItem(`stamps_${user.uid}_${habitId}`, JSON.stringify(newStamps));
       }
       
       return {
@@ -356,6 +363,22 @@ function HomePageContent() {
       };
     });
   };
+
+  const handleSignOut = () => {
+    signOut(auth).then(() => {
+      router.push('/signin');
+    }).catch((error) => {
+      console.error('Sign out error', error);
+    });
+  };
+
+  if (!user) {
+    return (
+        <div className="min-h-screen bg-black flex items-center justify-center">
+            <p className="text-white">Loading...</p>
+        </div>
+    );
+  }
 
   const expandedHabit = habits.find(h => h.id === expandedHabitId);
 
@@ -400,18 +423,28 @@ function HomePageContent() {
                 <div className="relative">
                   <h1 className="font-playfair text-4xl">Stamps</h1>
                    <div className="font-caveat absolute top-10 left-12 text-pink-900 bg-pink-300 px-2 rounded -rotate-12">
-                    @username
+                    @{user.displayName || user.email?.split('@')[0]}
                   </div>
                 </div>
-                <Button
-                    size="icon"
-                    className="rounded-full bg-white text-black"
-                    asChild
-                >
-                    <Link href="/new">
-                        <Plus />
-                    </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        size="icon"
+                        className="rounded-full bg-white text-black"
+                        asChild
+                    >
+                        <Link href="/new">
+                            <Plus />
+                        </Link>
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant="outline"
+                        className="rounded-full"
+                        onClick={handleSignOut}
+                    >
+                        <LogOut />
+                    </Button>
+                </div>
             </header>
 
             <main className="p-4 mt-24 flex-1 flex items-center">
@@ -470,8 +503,10 @@ function HomePageContent() {
 
 export default function HomePage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><p className="text-white">Loading...</p></div>}>
       <HomePageContent />
     </Suspense>
   );
 }
+
+    
