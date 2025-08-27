@@ -166,14 +166,13 @@ function StampCard({
                 )}
                 style={{backgroundColor: isStamped ? cardTextColor: 'transparent', borderColor: `${cardTextColor}40`}}
               >
-                {isStamped ? (
-                  <StampIcon
+                <StampIcon
                     name={habit.stampLogo || "check"}
-                    className="h-6 w-6"
+                    className={cn("h-6 w-6 transition-all duration-300 transform", isStamped ? 'scale-100 opacity-100' : 'scale-0 opacity-0')}
                     style={{color: isComplete ? '#fde047' : (habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white')}}
                   />
-                ) : (
-                  <span className="text-sm opacity-50" style={{color: cardTextColor}}>{day}</span>
+                {!isStamped && (
+                  <span className="absolute text-sm opacity-50" style={{color: cardTextColor}}>{day}</span>
                 )}
               </button>
             )
