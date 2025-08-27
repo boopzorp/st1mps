@@ -59,7 +59,7 @@ const StampCard = ({
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-zinc-900 text-white overflow-hidden">
+    <div className="min-h-screen bg-zinc-900 text-white overflow-x-hidden">
       <div className="relative isolate">
         <div
           className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -107,10 +107,10 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="relative mt-16 sm:mt-24">
+          <div className="relative mt-16 sm:mt-24 pb-20">
             <div className="lg:mx-auto lg:max-w-7xl lg:px-8">
-              <div className="relative lg:h-[45rem] overflow-hidden">
-                <div className="absolute top-0 grid h-full w-full grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+              <div className="relative h-[60rem] sm:h-[45rem] overflow-hidden">
+                <div className="absolute top-0 grid h-full w-full grid-cols-2 gap-6 p-6">
                   <div className="flex flex-col gap-6">
                     <StampCard
                         title="READ EVERY DAY"
@@ -131,6 +131,16 @@ export default function LandingPage() {
                         bgColor="bg-teal-300"
                         textColor="text-teal-950"
                         className="rotate-[2deg]"
+                    />
+                      <StampCard
+                        title="NO SODA"
+                        subtitle="30 day challenge"
+                        icon={Check}
+                        stamps={6}
+                        font="font-playfair"
+                        bgColor="bg-slate-300"
+                        textColor="text-slate-950"
+                        className="rotate-[-1deg]"
                     />
                   </div>
                    <div className="flex flex-col gap-6 mt-16">
@@ -154,9 +164,7 @@ export default function LandingPage() {
                         textColor="text-amber-950"
                         className="rotate-[-4deg]"
                     />
-                  </div>
-                   <div className="hidden lg:flex flex-col gap-6">
-                     <StampCard
+                    <StampCard
                         title="CODE SOMETHING"
                         subtitle="Daily coding challenge"
                         icon={Star}
@@ -166,41 +174,9 @@ export default function LandingPage() {
                         textColor="text-indigo-950"
                         className="rotate-[4deg]"
                     />
-                    <StampCard
-                        title="NO SODA"
-                        subtitle="30 day challenge"
-                        icon={Check}
-                        stamps={6}
-                        font="font-playfair"
-                        bgColor="bg-slate-300"
-                        textColor="text-slate-950"
-                        className="rotate-[-1deg]"
-                    />
-                  </div>
-                  <div className="hidden lg:flex flex-col gap-6 mt-16">
-                    <StampCard
-                        title="MEDITATE"
-                        subtitle="15 minutes daily"
-                        icon={Heart}
-                        stamps={10}
-                        font="font-playfair italic"
-                        bgColor="bg-fuchsia-300"
-                        textColor="text-fuchsia-950"
-                        className="rotate-[-2deg]"
-                    />
-                    <StampCard
-                        title="WAKE UP EARLY"
-                        subtitle="6 AM club"
-                        icon={Star}
-                        stamps={5}
-                        font="font-anton"
-                        bgColor="bg-lime-300"
-                        textColor="text-lime-950"
-                        className="rotate-[3deg]"
-                    />
                   </div>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900 to-transparent"></div>
               </div>
             </div>
           </div>
