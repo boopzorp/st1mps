@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Ellipsis, Plus, Trash2, Edit } from "lucide-react";
+import { Ellipsis, Plus, Trash2, Edit, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState, useCallback } from "react";
@@ -82,31 +82,39 @@ function StampCard({
     localStorage.setItem(`stamps_${habit.id}`, JSON.stringify(newStamped));
   };
 
+  const isComplete = habit.numStamps > 0 && stamped.length >= habit.numStamps;
   const progressPercent = habit.numStamps > 0 ? Math.round((stamped.length / habit.numStamps) * 100) : 0;
   
   const handleCardClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button, [role="menuitem"]')) {
+    if ((e.target as HTMLElement).closest('button, [role="menuitem"], a')) {
       return;
     }
     onExpand();
   }
 
   const numVisibleStamps = isExpanded ? habit.numStamps : 10;
+  const cardTextColor = isComplete ? '#422006' : habit.textColor;
 
   return (
     <div
       className={cn(
         "relative rounded-lg p-6 transition-all duration-300 ease-in-out h-full flex flex-col justify-between",
-        habit.cardClass,
+        isComplete ? 'bg-gradient-to-br from-yellow-300 to-amber-400 shadow-amber-500/50' : habit.cardClass,
         isExpanded ? 'shadow-2xl' : 'hover:shadow-xl'
       )}
       onClick={!isExpanded ? handleCardClick : undefined}
     >
       <div>
+        {isComplete && (
+            <div className="absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 -rotate-12 shadow-lg">
+                <Award className="h-4 w-4"/>
+                <span>Completed!</span>
+            </div>
+        )}
         <div className="absolute top-2 right-2 z-30">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: habit.textColor}}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" style={{color: cardTextColor}}>
                 <Ellipsis className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -142,13 +150,13 @@ function StampCard({
 
         <h2
           className={`text-5xl font-bold ${habit.titleClass}`}
-          style={{ color: habit.textColor }}
+          style={{ color: cardTextColor }}
         >
           <span className={cn(habit.line1Font)}>{habit.titleLine1}</span>
           <br />
           <span className={cn(habit.line2Font)}>{habit.titleLine2}</span>
         </h2>
-        <p className="mt-2 text-sm opacity-60" style={{ color: habit.textColor }}>
+        <p className="mt-2 text-sm opacity-60" style={{ color: cardTextColor }}>
           {habit.subtitle} | {progressPercent}% Complete
         </p>
         <div className={cn(
@@ -168,30 +176,30 @@ function StampCard({
                     ? "border-transparent"
                     : "border-black/20"
                 )}
-                style={{backgroundColor: isStamped ? habit.textColor: 'transparent', borderColor: `${habit.textColor}40`}}
+                style={{backgroundColor: isStamped ? cardTextColor: 'transparent', borderColor: `${cardTextColor}40`}}
               >
                 {isStamped ? (
                   <StampIcon
                     name={habit.stampLogo || "check"}
                     className="h-6 w-6"
-                    style={{color: habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white'}}
+                    style={{color: isComplete ? '#fde047' : (habit.cardClass.includes('bg-white') || habit.cardClass.includes('bg-[#F3F0E6]') ? 'black' : 'white')}}
                   />
                 ) : (
-                  <span className="text-sm opacity-50" style={{color: habit.textColor}}>{day}</span>
+                  <span className="text-sm opacity-50" style={{color: cardTextColor}}>{day}</span>
                 )}
               </button>
             )
           })}
           {habit.numStamps > numVisibleStamps && !isExpanded && (
             <div className="aspect-square rounded-full flex items-center justify-center">
-              <Ellipsis style={{color: habit.textColor}} />
+              <Ellipsis style={{color: cardTextColor}} />
             </div>
           )}
         </div>
       </div>
       <p
         className="mt-6 text-sm text-center opacity-60"
-        style={{ color: habit.textColor }}
+        style={{ color: cardTextColor }}
       >
         {habit.description}
       </p>
@@ -338,7 +346,7 @@ function HomePageContent() {
                 "fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300",
                  expandedHabitId ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
               )}
-              onClick={() => handleExpandToggle(expandedHabit.id)}
+              onClick={() => e.stopPropagation()}
             >
                 <div 
                   className="w-full max-w-md" 
@@ -438,3 +446,5 @@ export default function HomePage() {
     </Suspense>
   );
 }
+
+    
