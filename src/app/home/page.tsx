@@ -41,6 +41,7 @@ import { app, db } from "@/lib/firebase";
 import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, Unsubscribe, getDoc, setDoc } from "firebase/firestore";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
+import Confetti from 'react-confetti';
 
 
 interface Habit {
@@ -290,54 +291,74 @@ function HomePageContent() {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
 
   const auth = getAuth(app);
   
   useEffect(() => {
+    // Set initial window size
+    handleResize();
+
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    let habitsUnsubscribe: Unsubscribe | undefined;
+    let prefsUnsubscribe: Unsubscribe | undefined;
+
     const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (!currentUser) {
+      if (habitsUnsubscribe) habitsUnsubscribe();
+      if (prefsUnsubscribe) prefsUnsubscribe();
+
+      if (currentUser) {
+        // User is signed in
+        const userDocRef = doc(db, "users", currentUser.uid);
+        const habitsQuery = query(collection(userDocRef, "habits"));
+        habitsUnsubscribe = onSnapshot(habitsQuery, (querySnapshot) => {
+          const userHabits = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          } as Habit));
+          setHabits(userHabits);
+        }, (error) => {
+          console.error("Error fetching habits:", error);
+        });
+
+        const userPrefsDocRef = doc(db, "user_preferences", currentUser.uid);
+        prefsUnsubscribe = onSnapshot(userPrefsDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const prefs = docSnap.data();
+            const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
+            if (selectedColor) {
+              setStickerColor(selectedColor);
+            }
+          }
+        }, (error) => {
+          console.error("Error fetching user preferences:", error);
+        });
+      } else {
+        // User is signed out
         setHabits([]); // Clear habits on logout
         router.push("/signin");
       }
     });
-
-    let habitsUnsubscribe: Unsubscribe | undefined;
-    let prefsUnsubscribe: Unsubscribe | undefined;
-
-    if (user) {
-      const userDocRef = doc(db, "users", user.uid);
-      const habitsQuery = query(collection(userDocRef, "habits"));
-      habitsUnsubscribe = onSnapshot(habitsQuery, (querySnapshot) => {
-        const userHabits = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        } as Habit));
-        setHabits(userHabits);
-      }, (error) => {
-        console.error("Error fetching habits:", error);
-      });
-
-      const userPrefsDocRef = doc(db, "user_preferences", user.uid);
-      prefsUnsubscribe = onSnapshot(userPrefsDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const prefs = docSnap.data();
-          const selectedColor = stickerColorOptions.find(c => c.bg === prefs.stickerBg && c.text === prefs.stickerText);
-          if (selectedColor) {
-            setStickerColor(selectedColor);
-          }
-        }
-      }, (error) => {
-        console.error("Error fetching user preferences:", error);
-      });
-    }
 
     return () => {
       authUnsubscribe();
       if (habitsUnsubscribe) habitsUnsubscribe();
       if (prefsUnsubscribe) prefsUnsubscribe();
     };
-  }, [user, router]);
+  }, [auth, router]);
 
 
   const handleDeleteHabit = useCallback(async (habitId: string) => {
@@ -410,6 +431,11 @@ function HomePageContent() {
         await updateDoc(habitDocRef, {
           stamped: arrayUnion(day)
         });
+        // Check for completion
+        if (habit.stamped.length + 1 === habit.numStamps) {
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 5000); // Confetti for 5 seconds
+        }
       }
     } catch (error) {
       console.error("Error updating stamp:", error);
@@ -447,6 +473,7 @@ function HomePageContent() {
   return (
     <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center overflow-hidden">
         
+        {showConfetti && <Confetti width={windowSize.width} height={windowSize.height} recycle={false} />}
         <div 
             className={cn(
                 "fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300",
